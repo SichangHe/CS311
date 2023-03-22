@@ -3,16 +3,10 @@ defmodule NetMaze do
   Documentation for `NetMaze`.
   """
 
-  @doc """
-  Hello world.
+  use Application
 
-  ## Examples
-
-      iex> NetMaze.hello()
-      :world
-
-  """
-  def hello do
-    :world
+  @impl true
+  def start(_type, _args) do
+    Supervisor.start_link(NetMaze.Supervisor, [])
   end
 end
