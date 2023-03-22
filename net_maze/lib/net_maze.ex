@@ -7,6 +7,6 @@ defmodule NetMaze do
 
   @impl true
   def start(_type, args) do
-    NetMaze.GenServer.start_link(args)
+    Supervisor.start_link([{NetMaze.GenServer, args}], strategy: :one_for_all)
   end
 end
