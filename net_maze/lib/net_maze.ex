@@ -6,7 +6,7 @@ defmodule NetMaze do
   use Application
 
   @impl true
-  def start(_type, _args) do
-    Supervisor.start_link(NetMaze.Supervisor, [])
+  def start(_type, args) do
+    NetMaze.GenServer.start_link(args)
   end
 end

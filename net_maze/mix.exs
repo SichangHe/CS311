@@ -15,7 +15,13 @@ defmodule NetMaze.MixProject do
   def application do
     [
       extra_applications: [:logger],
-      mod: {NetMaze, []}
+      mod:
+        {NetMaze,
+         [
+           ip: System.get_env("IP") || "127.0.0.1",
+           port: System.get_env("PORT") || 58200,
+           message: System.get_env("MESSAGE") || "youknowwho"
+         ]}
     ]
   end
 
