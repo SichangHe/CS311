@@ -1,7 +1,14 @@
 defmodule NetMaze.GenServer do
+  @moduledoc """
+  A generic server that establishes a connection to the given IP and port,
+  and sends the given message as soon as the connection is established.
+  """
   use GenServer, restart: :transient
 
+  @type args :: [ip: String.t(), port: non_neg_integer, message: String.t()]
+
   @impl true
+  @spec init(args) :: {:ok, port | {:inet, atom, any}}
   def init(args) do
     ip = Keyword.get(args, :ip) |> String.to_charlist()
     port = Keyword.get(args, :port)
@@ -30,7 +37,16 @@ defmodule NetMaze.GenServer do
     {:noreply, state}
   end
 
-  def start_link(opts) do
-    GenServer.start_link(__MODULE__, opts, [])
+  @doc """
+  Start a `NetMaze.GenServer` instance.
+
+  The `args` passed in should include:
+  - `:ip`: the IP to connect to.
+  - `:port`: the port to connect to.
+  - `:message`: the message to send.
+  """
+  @spec start_link(args) :: {:ok, pid}
+  def start_link(args) do
+    GenServer.start_link(__MODULE__, args, [])
   end
 end

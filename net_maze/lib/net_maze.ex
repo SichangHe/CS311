@@ -1,12 +1,12 @@
 defmodule NetMaze do
   @moduledoc """
-  Documentation for `NetMaze`.
+  `NetMaze` is an application that tries to solve the NetMaze game.
   """
 
   use Application
 
   @impl true
   def start(_type, args) do
-    Supervisor.start_link([{NetMaze.GenServer, args}], strategy: :one_for_all)
+    NetMaze.Supervisor.start_link(args, name: NetMaze.Supervisor)
   end
 end
