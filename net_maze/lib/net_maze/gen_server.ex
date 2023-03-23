@@ -27,7 +27,6 @@ defmodule NetMaze.GenServer do
     ip = Keyword.get(args, :ip) |> String.to_charlist()
     port = Keyword.get(args, :port)
     message = Keyword.get(args, :message) |> encode
-    Logger.info("Sent message")
     socket = connect_send(ip, port, message)
     {:ok, %State{ip: ip, port: port, message: message, primary: socket, secondary: nil}}
   end
@@ -36,7 +35,9 @@ defmodule NetMaze.GenServer do
   def handle_info({:tcp, socket, message}, state) do
     message = String.trim(message)
 
-    if socket == state.primary do
+    from_primary = socket == state.primary
+
+    if from_primary do
       Logger.info("Received `#{message}` from primary connection.")
     else
       Logger.info("Received `#{message}`.")
@@ -45,8 +46,21 @@ defmodule NetMaze.GenServer do
     case message do
       "query " <> port_str ->
         port = String.to_integer(port_str)
-        socket = connect_send(state.ip, port, message)
-        {:noreply, %State{state | secondary: socket}}
+
+        if port == state.port do
+          # Send a new identification to the existing port.
+          :gen_tcp.send(socket, state.message)
+          {:noreply, state}
+        else
+          # Open a new connection to the specified port.
+          if not from_primary do
+            # Close current secondary connection before opening a new one.
+            :gen_tcp.close(state.secondary)
+          end
+
+          socket = connect_send(state.ip, port, state.message)
+          {:noreply, %State{state | port: port, secondary: socket}}
+        end
 
       "status " <> _status ->
         {:stop, :normal, state}
@@ -54,8 +68,12 @@ defmodule NetMaze.GenServer do
   end
 
   def handle_info({:tcp_closed, socket}, state) do
-    Logger.info("Socket closed.")
-    ^socket = state.primary
+    if socket == state.primary do
+      Logger.info("Primary connection closed.")
+    else
+      Logger.info("Connection closed.")
+    end
+
     {:stop, :normal, state}
   end
 
@@ -81,6 +99,7 @@ defmodule NetMaze.GenServer do
   defp connect_send(ip, port, message) do
     {:ok, socket} = :gen_tcp.connect(ip, port, [:binary, packet: :line])
     :ok = :gen_tcp.send(socket, message)
+    Logger.info("Sent `#{message}` to #{ip}:#{port}.")
     socket
   end
 
