@@ -26,18 +26,31 @@ defmodule NetMaze.GenServer do
   def init(args) do
     ip = Keyword.get(args, :ip) |> String.to_charlist()
     port = Keyword.get(args, :port)
-    message = Keyword.get(args, :message)
-    {:ok, socket} = :gen_tcp.connect(ip, port, [:binary, packet: :line])
-    :ok = :gen_tcp.send(socket, message <> "\n")
+    message = Keyword.get(args, :message) |> encode
     Logger.info("Sent message")
+    socket = connect_send(ip, port, message)
     {:ok, %State{ip: ip, port: port, message: message, primary: socket, secondary: nil}}
   end
 
   @impl true
   def handle_info({:tcp, socket, message}, state) do
-    Logger.info("Received #{String.trim(message)}.")
-    ^socket = state.primary
-    {:noreply, state}
+    message = String.trim(message)
+
+    if socket == state.primary do
+      Logger.info("Received `#{message}` from primary connection.")
+    else
+      Logger.info("Received `#{message}`.")
+    end
+
+    case message do
+      "query " <> port_str ->
+        port = String.to_integer(port_str)
+        socket = connect_send(state.ip, port, message)
+        {:noreply, %State{state | secondary: socket}}
+
+      "status " <> _status ->
+        {:stop, :normal, state}
+    end
   end
 
   def handle_info({:tcp_closed, socket}, state) do
@@ -62,5 +75,17 @@ defmodule NetMaze.GenServer do
   @spec start_link(args) :: {:ok, pid}
   def start_link(args) do
     GenServer.start_link(__MODULE__, args, [])
+  end
+
+  @spec connect_send(charlist, non_neg_integer, String.t()) :: port
+  defp connect_send(ip, port, message) do
+    {:ok, socket} = :gen_tcp.connect(ip, port, [:binary, packet: :line])
+    :ok = :gen_tcp.send(socket, message)
+    socket
+  end
+
+  @spec encode(String.t()) :: String.t()
+  defp encode(message) do
+    "id " <> message <> "\n"
   end
 end
