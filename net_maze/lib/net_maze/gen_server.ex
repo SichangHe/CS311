@@ -94,7 +94,7 @@ defmodule NetMaze.GenServer do
   """
   @spec start_link(args) :: {:ok, pid}
   def start_link(args) do
-    GenServer.start_link(__MODULE__, args, [])
+    GenServer.start_link(__MODULE__, args, name: __MODULE__)
   end
 
   @spec connect_send(charlist, non_neg_integer, String.t()) :: port

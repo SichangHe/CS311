@@ -10,7 +10,7 @@ brew install elixir
 
 By installing Elixir, you get `elixir`, `elixirc`, `iex`, and `mix`.
 
-## Test
+## Run
 
 ```shell
 mix run
