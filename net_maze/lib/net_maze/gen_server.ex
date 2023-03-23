@@ -16,6 +16,7 @@ defmodule NetMaze.GenServer do
   and sends the given message as soon as the connection is established.
   """
   use GenServer, restart: :transient
+  require Logger
   alias __MODULE__.State
 
   @type args :: [ip: String.t(), port: non_neg_integer, message: String.t()]
@@ -28,19 +29,19 @@ defmodule NetMaze.GenServer do
     message = Keyword.get(args, :message)
     {:ok, socket} = :gen_tcp.connect(ip, port, [:binary, packet: :line])
     :ok = :gen_tcp.send(socket, message <> "\n")
-    IO.puts("Sent message")
+    Logger.info("Sent message")
     {:ok, %State{ip: ip, port: port, message: message, primary: socket, secondary: nil}}
   end
 
   @impl true
   def handle_info({:tcp, socket, message}, state) do
-    IO.puts("Received #{String.trim(message)}.")
+    Logger.info("Received #{String.trim(message)}.")
     ^socket = state.primary
     {:noreply, state}
   end
 
   def handle_info({:tcp_closed, socket}, state) do
-    IO.puts("Socket closed.")
+    Logger.info("Socket closed.")
     ^socket = state.primary
     {:stop, :normal, state}
   end
