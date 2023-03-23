@@ -31,6 +31,6 @@ defmodule NetMaze.GenServer do
   end
 
   def start_link(opts) do
-    GenServer.start_link(__MODULE__, opts, []) |> dbg
+    GenServer.start_link(__MODULE__, opts, [])
   end
 end
