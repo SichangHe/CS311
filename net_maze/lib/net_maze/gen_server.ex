@@ -50,12 +50,14 @@ defmodule NetMaze.GenServer do
         if port == state.port do
           # Send a new identification to the existing port.
           :gen_tcp.send(socket, state.message)
+          Logger.info("Resent `#{state.message}` to #{state.ip}:#{port}.")
           {:noreply, state}
         else
           # Open a new connection to the specified port.
           if not from_primary do
             # Close current secondary connection before opening a new one.
             :gen_tcp.close(state.secondary)
+            Logger.info("Taking down secondary connection to #{state.ip}:#{state.port}.")
           end
 
           socket = connect_send(state.ip, port, state.message)
