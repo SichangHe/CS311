@@ -1,14 +1,27 @@
+defmodule NetMaze.GenServer.State do
+  defstruct [:ip, :port, :message, :primary, :secondary]
+
+  @type t :: %__MODULE__{
+          ip: charlist,
+          port: non_neg_integer,
+          message: String.t(),
+          primary: port,
+          secondary: port | nil
+        }
+end
+
 defmodule NetMaze.GenServer do
   @moduledoc """
   A generic server that establishes a connection to the given IP and port,
   and sends the given message as soon as the connection is established.
   """
   use GenServer, restart: :transient
+  alias __MODULE__.State
 
   @type args :: [ip: String.t(), port: non_neg_integer, message: String.t()]
 
   @impl true
-  @spec init(args) :: {:ok, port | {:inet, atom, any}}
+  @spec init(args) :: {:ok, State.t() | {:inet, atom, any}}
   def init(args) do
     ip = Keyword.get(args, :ip) |> String.to_charlist()
     port = Keyword.get(args, :port)
@@ -16,19 +29,19 @@ defmodule NetMaze.GenServer do
     {:ok, socket} = :gen_tcp.connect(ip, port, [:binary, packet: :line])
     :ok = :gen_tcp.send(socket, message <> "\n")
     IO.puts("Sent message")
-    {:ok, socket}
+    {:ok, %State{ip: ip, port: port, message: message, primary: socket, secondary: nil}}
   end
 
   @impl true
   def handle_info({:tcp, socket, message}, state) do
     IO.puts("Received #{String.trim(message)}.")
-    ^state = socket
+    ^socket = state.primary
     {:noreply, state}
   end
 
   def handle_info({:tcp_closed, socket}, state) do
     IO.puts("Socket closed.")
-    ^state = socket
+    ^socket = state.primary
     {:stop, :normal, state}
   end
 
