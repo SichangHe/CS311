@@ -28,32 +28,32 @@ defmodule NetMaze.GenServer do
   @type args :: [ip: String.t(), port: non_neg_integer, message: String.t()]
 
   @impl true
-  @spec init(args) :: {:ok, nil | {:inet, atom, any}}
+  @spec init(args) :: {:ok, State.t() | {:inet, atom, any}}
   def init(args) do
-    send(self(), {:init, args})
-    {:ok, nil}
+    ip = Keyword.get(args, :ip) |> String.to_charlist()
+    port = Keyword.get(args, :port)
+    message = Keyword.get(args, :message) |> encode
+    {:ok, socket} = :gen_tcp.connect(ip, port, [:binary, packet: :line])
+    send(self(), :init)
+    {:ok, %State{ip: ip, message: message, primary: socket, secondary: %{}}}
   end
 
   @impl true
   @spec handle_info(any, State.t() | nil) :: {:noreply, State.t()} | {:stop, :normal, State.t()}
-  def handle_info({:init, args}, _state) do
-    ip = Keyword.get(args, :ip) |> String.to_charlist()
-    port = Keyword.get(args, :port)
-    message = Keyword.get(args, :message) |> encode
-
-    case connect_send(ip, port, message) do
+  def handle_info(:init, state) do
+    case :gen_tcp.send(state.primary, state.message) do
       {:error, error} ->
         try do
-          Logger.error("#{inspect(error)} trying to connect to #{ip}:#{port}.")
+          Logger.error("#{inspect(error)} init.")
         catch
           kind, _value when kind in [:exit, :throw] ->
-            Logger.error("Error trying to connect to #{ip}:#{port}.")
+            Logger.error("Error init.")
         end
 
         {:stop, :normal, nil}
 
-      {:ok, socket} ->
-        {:noreply, %State{ip: ip, message: message, primary: socket, secondary: %{}}}
+      :ok ->
+        {:noreply, state}
     end
   end
 
