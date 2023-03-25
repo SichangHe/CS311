@@ -33,22 +33,14 @@ defmodule NetMaze.GenServer do
     ip = Keyword.get(args, :ip) |> String.to_charlist()
     port = Keyword.get(args, :port)
     message = Keyword.get(args, :message) |> encode
-    socket = connect_send(ip, port, message)
+    {:ok, socket} = connect_send(ip, port, message)
     {:ok, %State{ip: ip, message: message, primary: socket, secondary: %{}}}
   end
 
   @impl true
   @spec handle_info(any, State.t()) :: {:noreply, State.t()} | {:stop, :normal, State.t()}
-  def handle_info({:tcp, socket, message}, state) do
+  def handle_info({:tcp, _socket, message}, state) do
     message = String.trim(message)
-
-    from_primary = socket == state.primary
-
-    if from_primary do
-      Logger.info("Received `#{message}` from primary connection.")
-    else
-      Logger.info("Received `#{message}`.")
-    end
 
     case message do
       "query " <> port_str ->
@@ -58,14 +50,19 @@ defmodule NetMaze.GenServer do
           nil ->
             # No existing connection to this new port.
             # Establish a new connection.
-            socket = connect_send(state.ip, port, state.message)
-            {:noreply, update_in(state.secondary, &Map.put(&1, port, socket))}
+            case connect_send(state.ip, port, state.message) do
+              {:error, error} ->
+                Logger.error("#{inspect(error)} trying to connect to #{state.ip}:#{port}.")
+                {:stop, :normal, state}
+
+              {:ok, socket} ->
+                {:noreply, update_in(state.secondary, &Map.put(&1, port, socket))}
+            end
 
           existing_socket ->
             # Connection to this port exists.
             # Resend the identification.
             :gen_tcp.send(existing_socket, state.message)
-            Logger.info("Resent `#{state.message}` to #{state.ip}:#{port}.")
             {:noreply, state}
         end
 
@@ -77,10 +74,8 @@ defmodule NetMaze.GenServer do
 
   def handle_info({:tcp_closed, socket}, state) do
     if socket == state.primary do
-      Logger.info("Primary connection closed.")
       {:stop, :normal, state}
     else
-      Logger.info("A secondary connection closed.")
       {:noreply, state}
     end
   end
@@ -103,12 +98,14 @@ defmodule NetMaze.GenServer do
     GenServer.start_link(__MODULE__, args)
   end
 
-  @spec connect_send(charlist, non_neg_integer, String.t()) :: port
+  @spec connect_send(charlist, non_neg_integer, String.t()) :: {:ok, port} | {:error, any}
   defp connect_send(ip, port, message) do
-    {:ok, socket} = :gen_tcp.connect(ip, port, [:binary, packet: :line])
-    :ok = :gen_tcp.send(socket, message)
-    Logger.info("Sent `#{message}` to #{ip}:#{port}.")
-    socket
+    with {:ok, socket} <- :gen_tcp.connect(ip, port, [:binary, packet: :line]),
+         :ok <- :gen_tcp.send(socket, message) do
+      {:ok, socket}
+    else
+      error -> {:error, error}
+    end
   end
 
   @spec encode(String.t()) :: String.t()
