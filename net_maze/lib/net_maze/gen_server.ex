@@ -21,7 +21,7 @@ defmodule NetMaze.GenServer do
   A generic server that establishes a connection to the given IP and port,
   and sends the given message as soon as the connection is established.
   """
-  use GenServer, restart: :transient
+  use GenServer
   require Logger
   alias __MODULE__.State
 
