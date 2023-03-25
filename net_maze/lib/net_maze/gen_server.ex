@@ -3,10 +3,9 @@ defmodule NetMaze.GenServer.State do
 
   @type t :: %__MODULE__{
           ip: charlist,
-          port: non_neg_integer,
           message: String.t(),
           primary: port,
-          secondary: port | nil
+          secondary: %{non_neg_integer => port}
         }
 end
 
@@ -28,7 +27,7 @@ defmodule NetMaze.GenServer do
     port = Keyword.get(args, :port)
     message = Keyword.get(args, :message) |> encode
     socket = connect_send(ip, port, message)
-    {:ok, %State{ip: ip, port: port, message: message, primary: socket, secondary: nil}}
+    {:ok, %State{ip: ip, message: message, primary: socket, secondary: %{}}}
   end
 
   @impl true
@@ -47,21 +46,19 @@ defmodule NetMaze.GenServer do
       "query " <> port_str ->
         port = String.to_integer(port_str)
 
-        if port == state.port do
-          # Send a new identification to the existing port.
-          :gen_tcp.send(socket, state.message)
-          Logger.info("Resent `#{state.message}` to #{state.ip}:#{port}.")
-          {:noreply, state}
-        else
-          # Open a new connection to the specified port.
-          if not from_primary do
-            # Close current secondary connection before opening a new one.
-            :gen_tcp.close(state.secondary)
-            Logger.info("Taking down secondary connection to #{state.ip}:#{state.port}.")
-          end
+        case state.secondary[port] do
+          nil ->
+            # No existing connection to this new port.
+            # Establish a new connection.
+            socket = connect_send(state.ip, port, state.message)
+            {:noreply, update_in(state.secondary, &Map.put(&1, port, socket))}
 
-          socket = connect_send(state.ip, port, state.message)
-          {:noreply, %State{state | port: port, secondary: socket}}
+          existing_socket ->
+            # Connection to this port exists.
+            # Resend the identification.
+            :gen_tcp.send(existing_socket, state.message)
+            Logger.info("Resent `#{state.message}` to #{state.ip}:#{port}.")
+            {:noreply, state}
         end
 
       "status " <> _status ->
