@@ -40,8 +40,21 @@ defmodule NetMaze.GenServer do
     ip = Keyword.get(args, :ip) |> String.to_charlist()
     port = Keyword.get(args, :port)
     message = Keyword.get(args, :message) |> encode
-    {:ok, socket} = connect_send(ip, port, message)
-    {:ok, %State{ip: ip, message: message, primary: socket, secondary: %{}}}
+
+    case connect_send(ip, port, message) do
+      {:error, error} ->
+        try do
+          Logger.error("#{inspect(error)} trying to connect to #{ip}:#{port}.")
+        catch
+          kind, _value when kind in [:exit, :throw] ->
+            Logger.error("Error trying to connect to #{ip}:#{port}.")
+        end
+
+        {:stop, :normal, nil}
+
+      {:ok, socket} ->
+        {:noreply, %State{ip: ip, message: message, primary: socket, secondary: %{}}}
+    end
   end
 
   def handle_info({:tcp, _socket, message}, state) do
@@ -57,7 +70,13 @@ defmodule NetMaze.GenServer do
             # Establish a new connection.
             case connect_send(state.ip, port, state.message) do
               {:error, error} ->
-                Logger.error("#{inspect(error)} trying to connect to #{state.ip}:#{port}.")
+                try do
+                  Logger.error("#{inspect(error)} trying to connect to #{state.ip}:#{port}.")
+                catch
+                  kind, _value when kind in [:exit, :throw] ->
+                    Logger.error("Error trying to connect to #{state.ip}:#{port}.")
+                end
+
                 {:stop, :normal, state}
 
               {:ok, socket} ->

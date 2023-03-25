@@ -12,10 +12,7 @@ defmodule NetMaze do
       Supervisor.start_link(
         [
           {DynamicSupervisor,
-           name: NetMaze.Supervisor,
-           strategy: :one_for_one,
-           max_restarts: 0xFFFFFFFF,
-           max_children: :infinity}
+           name: NetMaze.Supervisor, strategy: :one_for_one, max_children: :infinity}
         ],
         strategy: :one_for_one
       )
@@ -24,10 +21,15 @@ defmodule NetMaze do
   end
 
   def loop(args) do
-    DynamicSupervisor.start_child(
-      NetMaze.Supervisor,
-      {NetMaze.GenServer, Keyword.put(args, :message, rand_str())}
-    )
+    try do
+      DynamicSupervisor.start_child(
+        NetMaze.Supervisor,
+        {NetMaze.GenServer, Keyword.put(args, :message, rand_str())}
+      )
+    catch
+      kind, _value when kind in [:exit, :throw] ->
+        :timer.sleep(500)
+    end
 
     loop(args)
   end
