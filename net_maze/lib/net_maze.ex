@@ -8,14 +8,32 @@ defmodule NetMaze do
 
   @impl true
   def start(_type, args) do
-    start = NetMaze.Supervisor.start_link(args, name: NetMaze.Supervisor)
-    # Wait until NetMaze.GenServer finishes.
-    reference = Process.monitor(NetMaze.GenServer)
+    {:ok, _} =
+      Supervisor.start_link(
+        [
+          {DynamicSupervisor,
+           name: NetMaze.Supervisor,
+           strategy: :one_for_one,
+           max_restarts: 0xFFFFFFFF,
+           max_children: :infinity}
+        ],
+        strategy: :one_for_one
+      )
 
-    receive do
-      {:DOWN, ^reference, _, _, _} -> Logger.info("NetMaze.GenServer finished.")
-    end
+    loop(args)
+  end
 
-    start
+  def loop(args) do
+    DynamicSupervisor.start_child(
+      NetMaze.Supervisor,
+      {NetMaze.GenServer, Keyword.put(args, :message, rand_str())}
+    )
+
+    loop(args)
+  end
+
+  def rand_str() do
+    len = 8..24 |> Enum.random()
+    ?a..?z |> Enum.take_random(len) |> List.to_string()
   end
 end
