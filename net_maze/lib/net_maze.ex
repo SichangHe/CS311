@@ -12,7 +12,10 @@ defmodule NetMaze do
       Supervisor.start_link(
         [
           {DynamicSupervisor,
-           name: NetMaze.Supervisor, strategy: :one_for_one, max_children: :infinity}
+        name: NetMaze.Supervisor,
+        strategy: :one_for_one,
+        max_restarts: 0xFFFFFFFF,
+        max_children: :infinity}
         ],
         strategy: :one_for_one
       )

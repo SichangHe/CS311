@@ -41,20 +41,8 @@ defmodule NetMaze.GenServer do
   @impl true
   @spec handle_info(any, State.t() | nil) :: {:noreply, State.t()} | {:stop, :normal, State.t()}
   def handle_info(:init, state) do
-    case :gen_tcp.send(state.primary, state.message) do
-      {:error, error} ->
-        try do
-          Logger.error("#{inspect(error)} init.")
-        catch
-          kind, _value when kind in [:exit, :throw] ->
-            Logger.error("Error init.")
-        end
-
-        {:stop, :normal, nil}
-
-      :ok ->
-        {:noreply, state}
-    end
+    :ok = :gen_tcp.send(state.primary, state.message)
+    {:noreply, state}
   end
 
   def handle_info({:tcp, _socket, message}, state) do
@@ -68,20 +56,8 @@ defmodule NetMaze.GenServer do
           nil ->
             # No existing connection to this new port.
             # Establish a new connection.
-            case connect_send(state.ip, port, state.message) do
-              {:error, error} ->
-                try do
-                  Logger.error("#{inspect(error)} trying to connect to #{state.ip}:#{port}.")
-                catch
-                  kind, _value when kind in [:exit, :throw] ->
-                    Logger.error("Error trying to connect to #{state.ip}:#{port}.")
-                end
-
-                {:stop, :normal, state}
-
-              {:ok, socket} ->
-                {:noreply, update_in(state.secondary, &Map.put(&1, port, socket))}
-            end
+            socket = connect_send(state.ip, port, state.message)
+            {:noreply, update_in(state.secondary, &Map.put(&1, port, socket))}
 
           existing_socket ->
             # Connection to this port exists.
@@ -122,14 +98,11 @@ defmodule NetMaze.GenServer do
     GenServer.start_link(__MODULE__, args)
   end
 
-  @spec connect_send(charlist, non_neg_integer, String.t()) :: {:ok, port} | {:error, any}
+  @spec connect_send(charlist, non_neg_integer, String.t()) :: port
   defp connect_send(ip, port, message) do
-    with {:ok, socket} <- :gen_tcp.connect(ip, port, [:binary, packet: :line]),
-         :ok <- :gen_tcp.send(socket, message) do
-      {:ok, socket}
-    else
-      error -> {:error, error}
-    end
+    {:ok, socket} = :gen_tcp.connect(ip, port, [:binary, packet: :line])
+    :ok = :gen_tcp.send(socket, message)
+    socket
   end
 
   @spec encode(String.t()) :: String.t()
