@@ -28,8 +28,15 @@ defmodule NetMaze.GenServer do
   @type args :: [ip: String.t(), port: non_neg_integer, message: String.t()]
 
   @impl true
-  @spec init(args) :: {:ok, State.t() | {:inet, atom, any}}
+  @spec init(args) :: {:ok, nil | {:inet, atom, any}}
   def init(args) do
+    send(self(), {:init, args})
+    {:ok, nil}
+  end
+
+  @impl true
+  @spec handle_info(any, State.t() | nil) :: {:noreply, State.t()} | {:stop, :normal, State.t()}
+  def handle_info({:init, args}, _state) do
     ip = Keyword.get(args, :ip) |> String.to_charlist()
     port = Keyword.get(args, :port)
     message = Keyword.get(args, :message) |> encode
@@ -37,8 +44,6 @@ defmodule NetMaze.GenServer do
     {:ok, %State{ip: ip, message: message, primary: socket, secondary: %{}}}
   end
 
-  @impl true
-  @spec handle_info(any, State.t()) :: {:noreply, State.t()} | {:stop, :normal, State.t()}
   def handle_info({:tcp, _socket, message}, state) do
     message = String.trim(message)
 
