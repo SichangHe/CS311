@@ -20,131 +20,134 @@ mix run
 
 ```shell
 $ mix run
-Compiling 1 file (.ex)
-
-08:37:48.409 [info] Sent `id sh623
+08:54:41.202 [info] Sent `id sh623
 ` to 67.159.95.167:51200.
 
-08:37:49.643 [info] Received `query 51214` from primary connection.
+08:54:41.412 [info] Received `query 51216` from primary connection.
 
-08:37:49.853 [info] Sent `id sh623
-` to 67.159.95.167:51214.
-
-08:37:50.064 [info] Received `query 51231`.
-
-08:37:50.273 [info] Sent `id sh623
-` to 67.159.95.167:51231.
-
-08:37:50.482 [info] Received `query 51236`.
-
-08:37:50.693 [info] Sent `id sh623
-` to 67.159.95.167:51236.
-
-08:37:50.904 [info] Received `query 51246`.
-
-08:37:51.113 [info] Sent `id sh623
-` to 67.159.95.167:51246.
-
-08:37:51.323 [info] Received `query 51220`.
-
-08:37:51.531 [info] Sent `id sh623
-` to 67.159.95.167:51220.
-
-08:37:51.742 [info] Received `query 51230`.
-
-08:37:51.951 [info] Sent `id sh623
-` to 67.159.95.167:51230.
-
-08:37:52.161 [info] Received `query 51210`.
-
-08:37:52.370 [info] Sent `id sh623
-` to 67.159.95.167:51210.
-
-08:37:52.578 [info] Received `query 51216`.
-
-08:37:52.787 [info] Sent `id sh623
+08:54:41.624 [info] Sent `id sh623
 ` to 67.159.95.167:51216.
 
-08:37:52.997 [info] Received `query 51247`.
+08:54:41.834 [info] Received `query 51211`.
 
-08:37:53.206 [info] Sent `id sh623
+08:54:42.043 [info] Sent `id sh623
+` to 67.159.95.167:51211.
+
+08:54:42.251 [info] Received `query 51247`.
+
+08:54:42.460 [info] Sent `id sh623
 ` to 67.159.95.167:51247.
 
-08:37:53.421 [info] Received `query 51230`.
+08:54:42.671 [info] Received `query 51226`.
 
-08:37:53.421 [info] Resent `id sh623
+08:54:42.882 [info] Sent `id sh623
+` to 67.159.95.167:51226.
+
+08:54:43.092 [info] Received `query 51230`.
+
+08:54:43.304 [info] Sent `id sh623
 ` to 67.159.95.167:51230.
 
-08:37:53.633 [info] Received `query 51214`.
+08:54:43.514 [info] Received `query 51235`.
 
-08:37:53.634 [info] Resent `id sh623
-` to 67.159.95.167:51214.
-
-08:37:53.845 [info] Received `query 51203`.
-
-08:37:54.055 [info] Sent `id sh623
-` to 67.159.95.167:51203.
-
-08:37:54.265 [info] Received `query 51243`.
-
-08:37:54.476 [info] Sent `id sh623
-` to 67.159.95.167:51243.
-
-08:37:54.691 [info] Received `query 51229`.
-
-08:37:54.899 [info] Sent `id sh623
-` to 67.159.95.167:51229.
-
-08:37:55.162 [info] Received `query 51245`.
-
-08:37:55.470 [info] Sent `id sh623
-` to 67.159.95.167:51245.
-
-08:37:55.681 [info] Received `query 51234`.
-
-08:37:55.892 [info] Sent `id sh623
-` to 67.159.95.167:51234.
-
-08:37:56.104 [info] Received `query 51227`.
-
-08:37:56.313 [info] Sent `id sh623
-` to 67.159.95.167:51227.
-
-08:37:56.522 [info] Received `query 51242`.
-
-08:37:56.731 [info] Sent `id sh623
-` to 67.159.95.167:51242.
-
-08:37:56.965 [info] Received `query 51223`.
-
-08:37:57.173 [info] Sent `id sh623
-` to 67.159.95.167:51223.
-
-08:37:57.415 [info] Received `query 51224`.
-
-08:37:57.730 [info] Sent `id sh623
-` to 67.159.95.167:51224.
-
-08:37:58.048 [info] Received `query 51201`.
-
-08:37:58.336 [info] Sent `id sh623
-` to 67.159.95.167:51201.
-
-08:37:58.552 [info] Received `query 51235`.
-
-08:37:58.761 [info] Sent `id sh623
+08:54:43.723 [info] Sent `id sh623
 ` to 67.159.95.167:51235.
 
-08:37:59.054 [info] Received `query 51233`.
+08:54:43.932 [info] Received `query 51209`.
 
-08:37:59.360 [info] Sent `id sh623
-` to 67.159.95.167:51233.
+08:54:44.141 [info] Sent `id sh623
+` to 67.159.95.167:51209.
 
-08:37:59.580 [info] Received `query 51203`.
+08:54:44.353 [info] Received `query 51229`.
 
-08:37:59.580 [info] Resent `id sh623
+08:54:44.563 [info] Sent `id sh623
+` to 67.159.95.167:51229.
+
+08:54:44.773 [info] Received `query 51202`.
+
+08:54:44.983 [info] Sent `id sh623
+` to 67.159.95.167:51202.
+
+08:54:45.191 [info] Received `query 51231`.
+
+08:54:45.428 [info] Sent `id sh623
+` to 67.159.95.167:51231.
+
+08:54:45.639 [info] Received `query 51238`.
+
+08:54:45.847 [info] Sent `id sh623
+` to 67.159.95.167:51238.
+
+08:54:46.056 [info] Received `query 51213`.
+
+08:54:46.265 [info] Sent `id sh623
+` to 67.159.95.167:51213.
+
+08:54:46.479 [info] Received `query 51230`.
+
+08:54:46.479 [info] Resent `id sh623
+` to 67.159.95.167:51230.
+
+08:54:46.692 [info] Received `query 51244`.
+
+08:54:46.902 [info] Sent `id sh623
+` to 67.159.95.167:51244.
+
+08:54:47.111 [info] Received `query 51234`.
+
+08:54:47.320 [info] Sent `id sh623
+` to 67.159.95.167:51234.
+
+08:54:47.592 [info] Received `query 51240`.
+
+08:54:47.800 [info] Sent `id sh623
+` to 67.159.95.167:51240.
+
+08:54:48.016 [info] Received `query 51211`.
+
+08:54:48.017 [info] Resent `id sh623
+` to 67.159.95.167:51211.
+
+08:54:48.229 [info] Received `query 51202`.
+
+08:54:48.229 [info] Resent `id sh623
+` to 67.159.95.167:51202.
+
+08:54:48.514 [info] Received `query 51247`.
+
+08:54:48.514 [info] Resent `id sh623
+` to 67.159.95.167:51247.
+
+08:54:48.726 [info] Received `query 51246`.
+
+08:54:48.939 [info] Sent `id sh623
+` to 67.159.95.167:51246.
+
+08:54:49.985 [info] Received `query 51235`.
+
+08:54:49.985 [info] Resent `id sh623
+` to 67.159.95.167:51235.
+
+08:54:50.196 [info] Received `query 51203`.
+
+08:54:50.404 [info] Sent `id sh623
 ` to 67.159.95.167:51203.
 
-08:37:59.791 [info] Received `status success` from primary connection.
-NetMaze.GenServer finished.
+08:54:50.613 [info] Received `query 51213`.
+
+08:54:50.614 [info] Resent `id sh623
+` to 67.159.95.167:51213.
+
+08:54:50.828 [info] Received `query 51223`.
+
+08:54:51.037 [info] Sent `id sh623
+` to 67.159.95.167:51223.
+
+08:54:51.311 [info] A secondary connection closed.
+
+08:54:51.312 [info] Received `status success` from primary connection.
+
+08:54:51.312 [warning] NetMaze.GenServer stopping at `success`.
+
+08:54:51.313 [info] NetMaze.GenServer finished.
 ```

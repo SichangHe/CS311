@@ -4,6 +4,7 @@ defmodule NetMaze do
   """
 
   use Application
+  require Logger
 
   @impl true
   def start(_type, args) do
@@ -12,7 +13,7 @@ defmodule NetMaze do
     reference = Process.monitor(NetMaze.GenServer)
 
     receive do
-      {:DOWN, ^reference, _, _, _} -> IO.puts("NetMaze.GenServer finished.")
+      {:DOWN, ^reference, _, _, _} -> Logger.info("NetMaze.GenServer finished.")
     end
 
     start

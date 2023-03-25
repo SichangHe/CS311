@@ -1,5 +1,12 @@
 defmodule NetMaze.GenServer.State do
-  defstruct [:ip, :port, :message, :primary, :secondary]
+  @moduledoc """
+  State of a `NetMaze.GenServer`.
+  - `ip`: IP address to connect to.
+  - `message`: message to send.
+  - `primary`: primary connection socket.
+  - `secondary`: map of secondary connections: port number => socket.
+  """
+  defstruct [:ip, :message, :primary, :secondary]
 
   @type t :: %__MODULE__{
           ip: charlist,
@@ -31,6 +38,7 @@ defmodule NetMaze.GenServer do
   end
 
   @impl true
+  @spec handle_info(any, State.t()) :: {:noreply, State.t()} | {:stop, :normal, State.t()}
   def handle_info({:tcp, socket, message}, state) do
     message = String.trim(message)
 
@@ -61,7 +69,8 @@ defmodule NetMaze.GenServer do
             {:noreply, state}
         end
 
-      "status " <> _status ->
+      "status " <> status ->
+        Logger.warn("NetMaze.GenServer stopping at `#{status}`.")
         {:stop, :normal, state}
     end
   end
@@ -69,11 +78,11 @@ defmodule NetMaze.GenServer do
   def handle_info({:tcp_closed, socket}, state) do
     if socket == state.primary do
       Logger.info("Primary connection closed.")
+      {:stop, :normal, state}
     else
-      Logger.info("Connection closed.")
+      Logger.info("A secondary connection closed.")
+      {:noreply, state}
     end
-
-    {:stop, :normal, state}
   end
 
   def handle_info(info, state) do
