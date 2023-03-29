@@ -6,13 +6,14 @@ defmodule NetMaze.GenServer.State do
   - `primary`: primary connection socket.
   - `secondary`: map of secondary connections: port number => socket.
   """
-  defstruct [:ip, :message, :primary, :secondary]
+  defstruct [:ip, :message, :primary, :secondary, :inform]
 
   @type t :: %__MODULE__{
           ip: charlist,
           message: String.t(),
           primary: port,
-          secondary: %{non_neg_integer => port}
+          secondary: %{non_neg_integer => port},
+          inform: [pid]
         }
 end
 
@@ -28,17 +29,24 @@ defmodule NetMaze.GenServer do
   @type args :: [ip: String.t(), port: non_neg_integer, message: String.t()]
 
   @impl true
-  @spec init(args) :: {:ok, State.t() | {:inet, atom, any}}
+  @spec init(args) :: {:ok, nil}
   def init(args) do
-    ip = Keyword.get(args, :ip) |> String.to_charlist()
-    port = Keyword.get(args, :port)
-    message = Keyword.get(args, :message) |> encode
-    socket = connect_send(ip, port, message)
-    {:ok, %State{ip: ip, message: message, primary: socket, secondary: %{}}}
+    Logger.info("GenServer.init")
+    send(self(), {:init, args})
+    {:ok, nil}
   end
 
   @impl true
   @spec handle_info(any, State.t()) :: {:noreply, State.t()} | {:stop, :normal, State.t()}
+  def handle_info({:init, args}, _state) do
+    ip = Keyword.get(args, :ip) |> String.to_charlist()
+    port = Keyword.get(args, :port)
+    message = Keyword.get(args, :message) |> encode
+    socket = connect_send(ip, port, message)
+    Logger.info("GenServer.init done")
+    {:noreply, %State{ip: ip, message: message, primary: socket, secondary: %{}, inform: []}}
+  end
+
   def handle_info({:tcp, socket, message}, state) do
     message = String.trim(message)
 
@@ -71,14 +79,14 @@ defmodule NetMaze.GenServer do
 
       "status " <> status ->
         Logger.warn("NetMaze.GenServer stopping at `#{status}`.")
-        {:stop, :normal, state}
+        stop(state)
     end
   end
 
   def handle_info({:tcp_closed, socket}, state) do
     if socket == state.primary do
       Logger.info("Primary connection closed.")
-      {:stop, :normal, state}
+      stop(state)
     else
       Logger.info("A secondary connection closed.")
       {:noreply, state}
@@ -88,6 +96,11 @@ defmodule NetMaze.GenServer do
   def handle_info(info, state) do
     dbg(info)
     {:noreply, state}
+  end
+
+  @impl true
+  def handle_call(:wait, from, state) do
+    {:noreply, update_in(state.inform, fn list -> [from | list] end)}
   end
 
   @doc """
@@ -100,6 +113,7 @@ defmodule NetMaze.GenServer do
   """
   @spec start_link(args) :: {:ok, pid}
   def start_link(args) do
+    Logger.info("GenServer.start_link")
     GenServer.start_link(__MODULE__, args, name: __MODULE__)
   end
 
@@ -114,5 +128,14 @@ defmodule NetMaze.GenServer do
   @spec encode(String.t()) :: String.t()
   defp encode(message) do
     "id " <> message <> "\n"
+  end
+
+  @spec stop(State.t()) :: {:stop, :normal, State.t()}
+  defp stop(state) do
+    for pid <- state.inform do
+      GenServer.reply(pid, :stop)
+    end
+
+    {:stop, :normal, state}
   end
 end
