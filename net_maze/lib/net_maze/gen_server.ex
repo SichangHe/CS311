@@ -56,37 +56,7 @@ defmodule NetMaze.GenServer do
       Logger.info("Received `#{message}`.")
     end
 
-    case message do
-      "query " <> port_str ->
-        port = String.to_integer(port_str)
-
-        case state.secondary[port] do
-          nil ->
-            # No existing connection to this new port.
-            # Establish a new connection.
-            socket = connect_send(state.ip, port, state.message)
-            {:noreply, update_in(state.secondary, &Map.put(&1, port, socket))}
-
-          existing_socket ->
-            # Connection to this port exists.
-            # Resend the identification.
-            :gen_tcp.send(existing_socket, state.message)
-            Logger.info("Resent `#{state.message}` to #{state.ip}:#{port}.")
-            {:noreply, state}
-        end
-
-      "status " <> status ->
-        Logger.warn("NetMaze.GenServer stopping at `#{status}`.")
-        stop(state)
-
-      "listen " <> port_str ->
-        port = String.to_integer(port_str)
-        {:ok, listen_socket} = :gen_tcp.listen(port, [:binary, packet: :line, reuseaddr: true])
-        Logger.info("Listening at port #{port_str} as requested.")
-        {:ok, socket} = :gen_tcp.accept(listen_socket)
-        Logger.info("Port #{port_str} received connection.")
-        {:noreply, update_in(state.secondary, &Map.put(&1, port, socket))}
-    end
+    decode(message, state)
   end
 
   def handle_info({:tcp_closed, socket}, state) do
@@ -133,6 +103,39 @@ defmodule NetMaze.GenServer do
   @spec encode(String.t()) :: String.t()
   defp encode(message) do
     "id " <> message <> "\n"
+  end
+
+  defp decode("query " <> port_str, state) do
+    port = String.to_integer(port_str)
+
+    case state.secondary[port] do
+      nil ->
+        # No existing connection to this new port.
+        # Establish a new connection.
+        socket = connect_send(state.ip, port, state.message)
+        {:noreply, update_in(state.secondary, &Map.put(&1, port, socket))}
+
+      existing_socket ->
+        # Connection to this port exists.
+        # Resend the identification.
+        :gen_tcp.send(existing_socket, state.message)
+        Logger.info("Resent `#{state.message}` to #{state.ip}:#{port}.")
+        {:noreply, state}
+    end
+  end
+
+  defp decode("status " <> status, state) do
+    Logger.warn("NetMaze.GenServer stopping at `#{status}`.")
+    stop(state)
+  end
+
+  defp decode("listen " <> port_str, state) do
+    port = String.to_integer(port_str)
+    {:ok, listen_socket} = :gen_tcp.listen(port, [:binary, packet: :line, reuseaddr: true])
+    Logger.info("Listening at port #{port_str} as requested.")
+    {:ok, socket} = :gen_tcp.accept(listen_socket)
+    Logger.info("Port #{port_str} received connection.")
+    {:noreply, update_in(state.secondary, &Map.put(&1, port, socket))}
   end
 
   @spec stop(State.t()) :: {:stop, :normal, State.t()}
