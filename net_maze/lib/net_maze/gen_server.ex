@@ -78,6 +78,14 @@ defmodule NetMaze.GenServer do
       "status " <> status ->
         Logger.warn("NetMaze.GenServer stopping at `#{status}`.")
         stop(state)
+
+      "listen " <> port_str ->
+        port = String.to_integer(port_str)
+        {:ok, listen_socket} = :gen_tcp.listen(port, [:binary, packet: :line, reuseaddr: true])
+        Logger.info("Listening at port #{port_str} as requested.")
+        {:ok, socket} = :gen_tcp.accept(listen_socket)
+        Logger.info("Port #{port_str} received connection.")
+        {:noreply, update_in(state.secondary, &Map.put(&1, port, socket))}
     end
   end
 

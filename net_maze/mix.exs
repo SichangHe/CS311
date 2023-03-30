@@ -19,7 +19,7 @@ defmodule NetMaze.MixProject do
         {NetMaze,
          [
            ip: System.get_env("IP") || "67.159.95.167",
-           port: System.get_env("PORT") || 51200,
+           port: System.get_env("PORT") || 51300,
            message: System.get_env("MESSAGE") || "youknowwho"
          ]}
     ]
