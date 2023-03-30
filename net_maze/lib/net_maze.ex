@@ -9,7 +9,6 @@ defmodule NetMaze do
   @impl true
   def start(_type, args) do
     start = NetMaze.Supervisor.start_link(args, name: NetMaze.Supervisor)
-    Logger.info("Started supervisor.")
     # Wait until NetMaze.GenServer finishes.
     GenServer.call(NetMaze.GenServer, :wait, 0xFFFF)
     start

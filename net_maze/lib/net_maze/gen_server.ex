@@ -31,7 +31,6 @@ defmodule NetMaze.GenServer do
   @impl true
   @spec init(args) :: {:ok, nil}
   def init(args) do
-    Logger.info("GenServer.init")
     send(self(), {:init, args})
     {:ok, nil}
   end
@@ -43,7 +42,6 @@ defmodule NetMaze.GenServer do
     port = Keyword.get(args, :port)
     message = Keyword.get(args, :message) |> encode
     socket = connect_send(ip, port, message)
-    Logger.info("GenServer.init done")
     {:noreply, %State{ip: ip, message: message, primary: socket, secondary: %{}, inform: []}}
   end
 
@@ -113,7 +111,6 @@ defmodule NetMaze.GenServer do
   """
   @spec start_link(args) :: {:ok, pid}
   def start_link(args) do
-    Logger.info("GenServer.start_link")
     GenServer.start_link(__MODULE__, args, name: __MODULE__)
   end
 
