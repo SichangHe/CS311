@@ -2,6 +2,10 @@ defmodule WebMazeWeb.QueryView do
   use WebMazeWeb, :view
   alias WebMazeWeb.QueryView
 
+  def render("run.json", %{run: run}) do
+    %{"runId" => "#{run.id}"}
+  end
+
   def render("index.json", %{queries: queries}) do
     %{data: render_many(queries, QueryView, "query.json")}
   end

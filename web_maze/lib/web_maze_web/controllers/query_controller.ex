@@ -6,6 +6,12 @@ defmodule WebMazeWeb.QueryController do
 
   action_fallback WebMazeWeb.FallbackController
 
+  def run(conn, %{"id" => id}) do
+    {:ok, run} = Queries.create_run(%{name: id})
+    # TODO: Run the NetMaze client.
+    render(conn, "run.json", run: run)
+  end
+
   def index(conn, _params) do
     queries = Queries.list_queries()
     render(conn, "index.json", queries: queries)
