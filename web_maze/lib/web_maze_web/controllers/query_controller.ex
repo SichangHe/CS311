@@ -12,6 +12,19 @@ defmodule WebMazeWeb.QueryController do
     render(conn, "run.json", run: run)
   end
 
+  def index(conn, %{"run" => run_id} = params) do
+    {limit, start} = limit_start(params)
+    queries = Queries.get_run!(run_id) |> Queries.queries_for_run()
+    # TODO: Pagination.
+
+    render(conn, "query_for_run.json",
+      run_id: run_id,
+      limit: limit,
+      start: start,
+      queries: queries
+    )
+  end
+
   def index(conn, _params) do
     queries = Queries.list_queries()
     render(conn, "index.json", queries: queries)
@@ -45,5 +58,11 @@ defmodule WebMazeWeb.QueryController do
     with {:ok, %Query{}} <- Queries.delete_query(query) do
       send_resp(conn, :no_content, "")
     end
+  end
+
+  defp limit_start(params) do
+    limit = min(String.to_integer(params["limit"] || "30"), 30)
+    start = String.to_integer(params["start"] || "1")
+    {limit, start}
   end
 end

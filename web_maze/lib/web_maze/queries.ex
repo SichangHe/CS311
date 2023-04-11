@@ -7,6 +7,11 @@ defmodule WebMaze.Queries do
   alias WebMaze.Repo
 
   alias WebMaze.Queries.Query
+  alias WebMaze.Queries.Run
+
+  def queries_for_run(%Run{} = run) do
+    Ecto.assoc(run, :query) |> Repo.all()
+  end
 
   @doc """
   Returns the list of queries.
