@@ -21,9 +21,11 @@ defmodule WebMazeWeb.Router do
   end
 
   # Other scopes may use custom stacks.
-  # scope "/api", WebMazeWeb do
-  #   pipe_through :api
-  # end
+  scope "/api", WebMazeWeb do
+    pipe_through :api
+
+    resources "/queries", QueryController, except: [:new, :edit]
+  end
 
   # Enables LiveDashboard only for development
   #
