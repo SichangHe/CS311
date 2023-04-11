@@ -21,7 +21,14 @@ defmodule WebMaze.QueriesTest do
     end
 
     test "create_query/1 with valid data creates a query" do
-      valid_attrs = %{connection_port: 42, connection_source: "some connection_source", query_target: 42}
+      run = run_fixture()
+
+      valid_attrs = %{
+        connection_port: 42,
+        connection_source: "some connection_source",
+        query_target: 42,
+        run_id: run.id
+      }
 
       assert {:ok, %Query{} = query} = Queries.create_query(valid_attrs)
       assert query.connection_port == 42
@@ -35,7 +42,12 @@ defmodule WebMaze.QueriesTest do
 
     test "update_query/2 with valid data updates the query" do
       query = query_fixture()
-      update_attrs = %{connection_port: 43, connection_source: "some updated connection_source", query_target: 43}
+
+      update_attrs = %{
+        connection_port: 43,
+        connection_source: "some updated connection_source",
+        query_target: 43
+      }
 
       assert {:ok, %Query{} = query} = Queries.update_query(query, update_attrs)
       assert query.connection_port == 43

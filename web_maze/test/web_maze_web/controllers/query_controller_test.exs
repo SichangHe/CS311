@@ -30,7 +30,13 @@ defmodule WebMazeWeb.QueryControllerTest do
 
   describe "create query" do
     test "renders query when data is valid", %{conn: conn} do
-      conn = post(conn, Routes.query_path(conn, :create), query: @create_attrs)
+      run = run_fixture()
+
+      conn =
+        post(conn, Routes.query_path(conn, :create),
+          query: Enum.into(%{run_id: run.id}, @create_attrs)
+        )
+
       assert %{"id" => id} = json_response(conn, 201)["data"]
 
       conn = get(conn, Routes.query_path(conn, :show, id))

@@ -8,12 +8,15 @@ defmodule WebMaze.QueriesFixtures do
   Generate a query.
   """
   def query_fixture(attrs \\ %{}) do
+    run = run_fixture()
+
     {:ok, query} =
       attrs
       |> Enum.into(%{
         connection_port: 42,
         connection_source: "some connection_source",
-        query_target: 42
+        query_target: 42,
+        run_id: run.id
       })
       |> WebMaze.Queries.create_query()
 
