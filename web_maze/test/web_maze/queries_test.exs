@@ -60,4 +60,58 @@ defmodule WebMaze.QueriesTest do
       assert %Ecto.Changeset{} = Queries.change_query(query)
     end
   end
+
+  describe "runs" do
+    alias WebMaze.Queries.Run
+
+    import WebMaze.QueriesFixtures
+
+    @invalid_attrs %{name: nil}
+
+    test "list_runs/0 returns all runs" do
+      run = run_fixture()
+      assert Queries.list_runs() == [run]
+    end
+
+    test "get_run!/1 returns the run with given id" do
+      run = run_fixture()
+      assert Queries.get_run!(run.id) == run
+    end
+
+    test "create_run/1 with valid data creates a run" do
+      valid_attrs = %{name: "some name"}
+
+      assert {:ok, %Run{} = run} = Queries.create_run(valid_attrs)
+      assert run.name == "some name"
+    end
+
+    test "create_run/1 with invalid data returns error changeset" do
+      assert {:error, %Ecto.Changeset{}} = Queries.create_run(@invalid_attrs)
+    end
+
+    test "update_run/2 with valid data updates the run" do
+      run = run_fixture()
+      update_attrs = %{name: "some updated name"}
+
+      assert {:ok, %Run{} = run} = Queries.update_run(run, update_attrs)
+      assert run.name == "some updated name"
+    end
+
+    test "update_run/2 with invalid data returns error changeset" do
+      run = run_fixture()
+      assert {:error, %Ecto.Changeset{}} = Queries.update_run(run, @invalid_attrs)
+      assert run == Queries.get_run!(run.id)
+    end
+
+    test "delete_run/1 deletes the run" do
+      run = run_fixture()
+      assert {:ok, %Run{}} = Queries.delete_run(run)
+      assert_raise Ecto.NoResultsError, fn -> Queries.get_run!(run.id) end
+    end
+
+    test "change_run/1 returns a run changeset" do
+      run = run_fixture()
+      assert %Ecto.Changeset{} = Queries.change_run(run)
+    end
+  end
 end

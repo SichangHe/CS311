@@ -19,4 +19,18 @@ defmodule WebMaze.QueriesFixtures do
 
     query
   end
+
+  @doc """
+  Generate a run.
+  """
+  def run_fixture(attrs \\ %{}) do
+    {:ok, run} =
+      attrs
+      |> Enum.into(%{
+        name: "some name"
+      })
+      |> WebMaze.Queries.create_run()
+
+    run
+  end
 end
