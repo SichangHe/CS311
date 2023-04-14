@@ -4,12 +4,15 @@ use std::{
     net::TcpStream,
 };
 
+use clap::{arg, command, Parser};
+
 type ResultDyn<T> = Result<T, Box<dyn Error>>;
 
 fn main() -> ResultDyn<()> {
-    let host = "127.0.0.1:4000";
+    let args = Args::parse();
+    eprintln!("{args:#?}");
     let path = "/api/list";
-    request(host, path, "GET")?;
+    request(&args.url, path, "GET")?;
     Ok(())
 }
 
@@ -48,4 +51,30 @@ Host: {host}\r
     println!("{}", String::from_utf8_lossy(&buf));
 
     Ok(())
+}
+
+#[derive(Parser, Debug)]
+#[command(version)]
+struct Args {
+    #[command(subcommand)]
+    cmd: Act,
+
+    #[arg(short, long)]
+    url: String,
+}
+
+#[derive(Parser, Debug)]
+enum Act {
+    Submit {
+        #[arg(short, long)]
+        id: String,
+    },
+    List {
+        #[arg(short, long)]
+        limit: usize,
+
+        #[arg(short, long)]
+        start: usize,
+    },
+    Stats,
 }
