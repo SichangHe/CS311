@@ -8,9 +8,15 @@ type ResultDyn<T> = Result<T, Box<dyn Error>>;
 
 fn main() -> ResultDyn<()> {
     let host = "127.0.0.1:4000";
+    let path = "/api/list";
+    request(host, path, "GET")?;
+    Ok(())
+}
+
+fn request(host: &str, path: &str, method: &str) -> ResultDyn<()> {
     let mut stream = TcpStream::connect(host)?;
     let to_write = format!(
-        "GET /api/list HTTP/1.1\r
+        "{method} {path} HTTP/1.1\r
 Host: {host}\r
 \r
 "
