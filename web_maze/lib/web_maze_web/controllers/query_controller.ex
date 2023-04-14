@@ -14,14 +14,19 @@ defmodule WebMazeWeb.QueryController do
 
   def index(conn, %{"run" => run_id} = params) do
     {limit, start} = limit_start(params)
-    queries = Queries.get_run!(run_id) |> Queries.queries_for_run()
-    # TODO: Pagination.
+
+    {queries, prev_start, prev_limit, next_start, next_limit} =
+      Queries.get_run!(run_id) |> Queries.queries_for_run() |> paginate(start, limit)
 
     render(conn, "query_for_run.json",
       run_id: run_id,
       limit: limit,
       start: start,
-      queries: queries
+      queries: queries,
+      prev_start: prev_start,
+      prev_limit: prev_limit,
+      next_start: next_start,
+      next_limit: next_limit
     )
   end
 
@@ -58,6 +63,23 @@ defmodule WebMazeWeb.QueryController do
     with {:ok, %Query{}} <- Queries.delete_query(query) do
       send_resp(conn, :no_content, "")
     end
+  end
+
+  @doc """
+  Retrieve the portion of the list of queries from `start` - 1 up to a number of
+  `limit` queries.
+  Calculate the start and limit of the previous/next page so that none of the
+  entries would overlap with the current page.
+  """
+  def paginate(queries, start, limit) do
+    len = length(queries)
+    finish = min(start + limit - 1, len)
+    retrieved_queries = Enum.slice(queries, start - 1, finish - start + 1)
+    prev_start = max(1, start - limit)
+    prev_limit = start - prev_start
+    next_start = finish + 1
+    next_limit = min(limit, len - finish)
+    {retrieved_queries, prev_start, prev_limit, next_start, next_limit}
   end
 
   defp limit_start(params) do
