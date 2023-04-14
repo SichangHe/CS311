@@ -5,6 +5,7 @@ defmodule WebMaze.Queries.Run do
 
   schema "runs" do
     field :name, :string
+    field :finished, :utc_datetime
     has_many :query, Query
 
     timestamps()
@@ -13,7 +14,7 @@ defmodule WebMaze.Queries.Run do
   @doc false
   def changeset(run, attrs) do
     run
-    |> cast(attrs, [:name])
+    |> cast(attrs, [:name, :finished])
     |> validate_required([:name])
   end
 end

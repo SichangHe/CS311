@@ -109,6 +109,10 @@ defmodule WebMaze.Queries do
 
   alias WebMaze.Queries.Run
 
+  def finish_run(%Run{} = run) do
+    update_run(run, %{finished: DateTime.utc_now()})
+  end
+
   @doc """
   Returns the list of runs.
 
