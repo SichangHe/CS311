@@ -18,16 +18,23 @@ defmodule WebMazeWeb.QueryController do
     {queries, prev_start, prev_limit, next_start, next_limit} =
       Queries.get_run!(run_id) |> Queries.queries_for_run() |> paginate(start, limit)
 
-    render(conn, "query_for_run.json",
-      run_id: run_id,
-      limit: limit,
-      start: start,
-      queries: queries,
-      prev_start: prev_start,
-      prev_limit: prev_limit,
-      next_start: next_start,
-      next_limit: next_limit
-    )
+    case queries do
+      # 204 No Content if run unfinished.
+      [] ->
+        send_resp(conn, 204, "")
+
+      queries ->
+        render(conn, "query_for_run.json",
+          run_id: run_id,
+          limit: limit,
+          start: start,
+          queries: queries,
+          prev_start: prev_start,
+          prev_limit: prev_limit,
+          next_start: next_start,
+          next_limit: next_limit
+        )
+    end
   end
 
   def index(conn, _params) do
