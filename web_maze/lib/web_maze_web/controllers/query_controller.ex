@@ -13,27 +13,31 @@ defmodule WebMazeWeb.QueryController do
   end
 
   def index(conn, %{"run" => run_id} = params) do
-    {limit, start} = limit_start(params)
+    case limit_start(params) do
+      {:ok, {limit, start}} ->
+        {queries, prev_start, prev_limit, next_start, next_limit} =
+          Queries.get_run!(run_id) |> Queries.queries_for_run() |> paginate(start, limit)
 
-    {queries, prev_start, prev_limit, next_start, next_limit} =
-      Queries.get_run!(run_id) |> Queries.queries_for_run() |> paginate(start, limit)
+        case queries do
+          # 204 No Content if run unfinished.
+          [] ->
+            send_resp(conn, :no_content, "")
 
-    case queries do
-      # 204 No Content if run unfinished.
-      [] ->
-        send_resp(conn, 204, "")
+          queries ->
+            render(conn, "query_for_run.json",
+              run_id: run_id,
+              limit: limit,
+              start: start,
+              queries: queries,
+              prev_start: prev_start,
+              prev_limit: prev_limit,
+              next_start: next_start,
+              next_limit: next_limit
+            )
+        end
 
-      queries ->
-        render(conn, "query_for_run.json",
-          run_id: run_id,
-          limit: limit,
-          start: start,
-          queries: queries,
-          prev_start: prev_start,
-          prev_limit: prev_limit,
-          next_start: next_start,
-          next_limit: next_limit
-        )
+      :error ->
+        send_resp(conn, :bad_request, "The limit must be 1 ~ 30!")
     end
   end
 
@@ -90,8 +94,13 @@ defmodule WebMazeWeb.QueryController do
   end
 
   defp limit_start(params) do
-    limit = min(String.to_integer(params["limit"] || "30"), 30)
-    start = String.to_integer(params["start"] || "1")
-    {limit, start}
+    case String.to_integer(params["limit"] || "30") do
+      limit when limit in 1..30 ->
+        start = String.to_integer(params["start"] || "1")
+        {:ok, {limit, start}}
+
+      _ ->
+        :error
+    end
   end
 end
