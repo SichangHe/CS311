@@ -15,9 +15,11 @@ defmodule WebMaze.Application do
       # Start the PubSub system
       {Phoenix.PubSub, name: WebMaze.PubSub},
       # Start the Endpoint (http/https)
-      WebMazeWeb.Endpoint
+      WebMazeWeb.Endpoint,
       # Start a worker by calling: WebMaze.Worker.start_link(arg)
       # {WebMaze.Worker, arg}
+      # Supervisor for NetMaze.GenServer
+      {DynamicSupervisor, name: NetMaze.Supervisor}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

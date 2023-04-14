@@ -1,5 +1,6 @@
 defmodule WebMazeWeb.QueryController do
   use WebMazeWeb, :controller
+  require Logger
 
   alias WebMaze.Queries
   alias WebMaze.Queries.Query
@@ -32,7 +33,33 @@ defmodule WebMazeWeb.QueryController do
 
   def run(conn, %{"id" => id}) do
     {:ok, run} = Queries.create_run(%{name: id})
-    # TODO: Run the NetMaze client.
+    query_call = fn connection_source, connection_port, query_target ->
+      case Queries.create_query(%{
+             connection_source: connection_source,
+             connection_port: connection_port,
+             query_target: query_target,
+             run_id: run.id
+           }) do
+        {:error, changeset} ->
+          Logger.error("Error creating query with #{inspect(changeset)}")
+
+        {:ok, _} ->
+          :ok
+      end
+    end
+
+    finish_call = fn -> Queries.finish_run(run) end
+
+    args = [
+      ip: System.get_env("IP") || "67.159.95.167",
+      port: System.get_env("PORT") || 51300,
+      message: id,
+      query_call: query_call,
+      finish_call: finish_call
+    ]
+
+    DynamicSupervisor.start_child(NetMaze.Supervisor, {NetMaze.GenServer, args})
+
     render(conn, "run.json", run: run)
   end
 

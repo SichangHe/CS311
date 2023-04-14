@@ -6,14 +6,17 @@ defmodule NetMaze.GenServer.State do
   - `primary`: primary connection socket.
   - `secondary`: map of secondary connections: port number => socket.
   """
-  defstruct [:ip, :message, :primary, :secondary, :inform]
+  defstruct [:ip, :port, :message, :primary, :secondary, :inform, :query_call, :finish_call]
 
   @type t :: %__MODULE__{
           ip: charlist,
+          port: non_neg_integer,
           message: String.t(),
           primary: port,
           secondary: %{non_neg_integer => port},
-          inform: [pid]
+          inform: [pid],
+          query_call: (String.t(), non_neg_integer, non_neg_integer -> :ok) | nil,
+          finish_call: (() -> :ok) | nil
         }
 end
 
@@ -42,7 +45,20 @@ defmodule NetMaze.GenServer do
     port = Keyword.get(args, :port)
     message = Keyword.get(args, :message) |> encode
     socket = connect_send(ip, port, message)
-    {:noreply, %State{ip: ip, message: message, primary: socket, secondary: %{}, inform: []}}
+    query_call = Keyword.get(args, :query_call)
+    finish_call = Keyword.get(args, :finish_call)
+
+    {:noreply,
+     %State{
+       ip: ip,
+       port: port,
+       message: message,
+       primary: socket,
+       query_call: query_call,
+       finish_call: finish_call,
+       secondary: %{},
+       inform: []
+     }}
   end
 
   def handle_info({:tcp, socket, message}, state) do
@@ -59,6 +75,11 @@ defmodule NetMaze.GenServer do
     case message do
       "query " <> port_str ->
         port = String.to_integer(port_str)
+
+        if state.query_call != nil do
+          socket_port = port_of_socket(state, socket)
+          state.query_call.("server", port, socket_port)
+        end
 
         case state.secondary[port] do
           nil ->
@@ -82,6 +103,12 @@ defmodule NetMaze.GenServer do
       "listen " <> port_str ->
         port = String.to_integer(port_str)
         {:ok, listen_socket} = :gen_tcp.listen(port, [:binary, packet: :line, reuseaddr: true])
+
+        if state.query_call != nil do
+          socket_port = port_of_socket(state, socket)
+          state.query_call.("client", port, socket_port)
+        end
+
         Logger.info("Listening at port #{port_str} as requested.")
         {:ok, socket} = :gen_tcp.accept(listen_socket)
         Logger.info("Port #{port_str} received connection.")
@@ -141,6 +168,22 @@ defmodule NetMaze.GenServer do
       GenServer.reply(pid, :stop)
     end
 
+    if state.finish_call != nil do
+      state.finish_call.()
+    end
+
     {:stop, :normal, state}
+  end
+
+  @spec port_of_socket(State.t(), port) :: non_neg_integer | nil
+  defp port_of_socket(state, socket) do
+    if(state.primary == socket) do
+      state.port
+    else
+      case Enum.find(state.secondary, fn {_, v} -> v == socket end) do
+        nil -> nil
+        {port, _} -> port
+      end
+    end
   end
 end
