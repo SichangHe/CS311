@@ -9,9 +9,11 @@ defmodule WebMazeWeb.QueryController do
   def finished(conn, params) do
     case limit_start(params) do
       {:ok, {limit, start}} ->
-        # TODO: No unfinished runs.
         {run_ids, prev_start, prev_limit, next_start, next_limit} =
-          Queries.list_runs() |> Enum.map(fn run -> run.id end) |> paginate(start, limit)
+          Queries.list_runs()
+          |> Enum.filter(fn run -> run.finished != nil end)
+          |> Enum.map(fn run -> run.id end)
+          |> paginate(start, limit)
 
         render(conn, "finished.json",
           limit: limit,
@@ -37,15 +39,17 @@ defmodule WebMazeWeb.QueryController do
   def index(conn, %{"run" => run_id} = params) do
     case limit_start(params) do
       {:ok, {limit, start}} ->
-        {queries, prev_start, prev_limit, next_start, next_limit} =
-          Queries.get_run!(run_id) |> Queries.queries_for_run() |> paginate(start, limit)
+        run = Queries.get_run!(run_id)
 
-        case queries do
-          # 204 No Content if run unfinished.
-          [] ->
+        case run.finished do
+          nil ->
+            # 204 No Content if run unfinished.
             send_resp(conn, :no_content, "")
 
-          queries ->
+          _ ->
+            {queries, prev_start, prev_limit, next_start, next_limit} =
+              run |> Queries.queries_for_run() |> paginate(start, limit)
+
             render(conn, "query_for_run.json",
               run_id: run_id,
               limit: limit,
@@ -107,7 +111,7 @@ defmodule WebMazeWeb.QueryController do
   def paginate(queries, start, limit) do
     len = length(queries)
     finish = min(start + limit - 1, len)
-    retrieved_queries = Enum.slice(queries, start - 1, finish - start + 1)
+    retrieved_queries = Enum.slice(queries, start - 1, max(finish - start + 1, 0))
     prev_start = max(1, start - limit)
     prev_limit = start - prev_start
     next_start = finish + 1
