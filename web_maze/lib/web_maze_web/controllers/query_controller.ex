@@ -6,6 +6,28 @@ defmodule WebMazeWeb.QueryController do
 
   action_fallback WebMazeWeb.FallbackController
 
+  def finished(conn, params) do
+    case limit_start(params) do
+      {:ok, {limit, start}} ->
+        # TODO: No unfinished runs.
+        {run_ids, prev_start, prev_limit, next_start, next_limit} =
+          Queries.list_runs() |> Enum.map(fn run -> run.id end) |> paginate(start, limit)
+
+        render(conn, "finished.json",
+          limit: limit,
+          start: start,
+          run_ids: run_ids,
+          prev_start: prev_start,
+          prev_limit: prev_limit,
+          next_start: next_start,
+          next_limit: next_limit
+        )
+
+      :error ->
+        send_resp(conn, :bad_request, "The limit must be 1 ~ 30!")
+    end
+  end
+
   def run(conn, %{"id" => id}) do
     {:ok, run} = Queries.create_run(%{name: id})
     # TODO: Run the NetMaze client.

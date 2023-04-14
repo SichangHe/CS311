@@ -24,6 +24,7 @@ defmodule WebMazeWeb.Router do
   scope "/api", WebMazeWeb do
     pipe_through :api
 
+    get "/list", QueryController, :finished
     post "/run/:id", QueryController, :run
     resources "/queries", QueryController, except: [:new, :edit]
   end

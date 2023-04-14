@@ -2,6 +2,36 @@ defmodule WebMazeWeb.QueryView do
   use WebMazeWeb, :view
   alias WebMazeWeb.QueryView
 
+  def render("finished.json", %{
+        limit: limit,
+        start: start,
+        run_ids: run_ids,
+        prev_start: prev_start,
+        prev_limit: prev_limit,
+        next_start: next_start,
+        next_limit: next_limit
+      }) do
+    prev =
+      case prev_limit do
+        0 -> nil
+        prev_limit -> "/api/list?limit=#{prev_limit}&start=#{prev_start}"
+      end
+
+    next =
+      case next_limit do
+        0 -> nil
+        next_limit -> "/api/list?&limit=#{next_limit}&start=#{next_start}"
+      end
+
+    %{
+      limit: limit,
+      start: start,
+      runIds: run_ids,
+      prev: prev,
+      next: next
+    }
+  end
+
   def render("query_for_run.json", %{
         run_id: run_id,
         limit: limit,
