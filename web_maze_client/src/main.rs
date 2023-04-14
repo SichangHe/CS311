@@ -11,9 +11,26 @@ type ResultDyn<T> = Result<T, Box<dyn Error>>;
 fn main() -> ResultDyn<()> {
     let args = Args::parse();
     eprintln!("{args:#?}");
-    let path = "/api/list";
-    request(&args.url, path, "GET")?;
-    Ok(())
+    match args.cmd {
+        Act::Submit { id } => submit(&args.url, &id),
+        Act::List { limit, start } => list(&args.url, limit, start),
+        Act::Stats => todo!(),
+    }
+}
+
+fn submit(host: &str, id: &str) -> ResultDyn<()> {
+    request(host, &format!("/api/run/{id}"), "POST")
+}
+
+fn list(host: &str, limit: Option<usize>, start: Option<usize>) -> ResultDyn<()> {
+    let path = "/api/list".to_owned();
+    let path = match (limit, start) {
+        (None, None) => path,
+        (Some(limit), None) => format!("{path}?limit={limit}"),
+        (None, Some(start)) => format!("{path}?start={start}"),
+        (Some(limit), Some(start)) => format!("{path}?limit={limit}&start={start}"),
+    };
+    request(host, &path, "GET")
 }
 
 fn request(host: &str, path: &str, method: &str) -> ResultDyn<()> {
@@ -71,10 +88,10 @@ enum Act {
     },
     List {
         #[arg(short, long)]
-        limit: usize,
+        limit: Option<usize>,
 
         #[arg(short, long)]
-        start: usize,
+        start: Option<usize>,
     },
     Stats,
 }
