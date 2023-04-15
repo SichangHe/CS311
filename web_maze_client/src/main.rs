@@ -1,9 +1,11 @@
 use clap::{arg, command, Parser};
+use log::debug;
 use web_maze_client::{request::request, response, ResultDyn};
 
 fn main() -> ResultDyn<()> {
+    env_logger::init();
     let args = Args::parse();
-    eprintln!("{args:#?}");
+    debug!("{args:#?}");
     match args.cmd {
         Act::Submit { id } => {
             submit(&args.url, &id)?;
