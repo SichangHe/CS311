@@ -26,7 +26,7 @@ defmodule WebMazeWeb.QueryView do
     %{
       limit: limit,
       start: start,
-      runIds: run_ids,
+      runIds: Enum.map(run_ids, fn id -> "#{id}" end),
       prev: prev,
       next: next
     }

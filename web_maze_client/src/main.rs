@@ -1,28 +1,35 @@
 use std::{
-    error::Error,
     io::{prelude::*, BufReader},
     net::TcpStream,
 };
 
 use clap::{arg, command, Parser};
-
-type ResultDyn<T> = Result<T, Box<dyn Error>>;
+use web_maze_client::{response, ResultDyn};
 
 fn main() -> ResultDyn<()> {
     let args = Args::parse();
     eprintln!("{args:#?}");
     match args.cmd {
-        Act::Submit { id } => submit(&args.url, &id),
-        Act::List { limit, start } => list(&args.url, limit, start),
+        Act::Submit { id } => {
+            submit(&args.url, &id)?;
+        }
+        Act::List { limit, start } => {
+            list(&args.url, limit, start)?;
+        }
         Act::Stats => todo!(),
     }
+    Ok(())
 }
 
-fn submit(host: &str, id: &str) -> ResultDyn<()> {
-    request(host, &format!("/api/run/{id}"), "POST")
+fn submit(host: &str, id: &str) -> ResultDyn<response::Submit> {
+    let body = request(host, &format!("/api/run/{id}"), "POST")?;
+    let submit_response = serde_json::from_str(&body)?;
+
+    println!("\n{submit_response:#?}");
+    Ok(submit_response)
 }
 
-fn list(host: &str, limit: Option<usize>, start: Option<usize>) -> ResultDyn<()> {
+fn list(host: &str, limit: Option<usize>, start: Option<usize>) -> ResultDyn<response::List> {
     let path = "/api/list".to_owned();
     let path = match (limit, start) {
         (None, None) => path,
@@ -30,10 +37,14 @@ fn list(host: &str, limit: Option<usize>, start: Option<usize>) -> ResultDyn<()>
         (None, Some(start)) => format!("{path}?start={start}"),
         (Some(limit), Some(start)) => format!("{path}?limit={limit}&start={start}"),
     };
-    request(host, &path, "GET")
+    let body = request(host, &path, "GET")?;
+
+    let list_response = serde_json::from_str(&body)?;
+    println!("\n{list_response:#?}");
+    Ok(list_response)
 }
 
-fn request(host: &str, path: &str, method: &str) -> ResultDyn<()> {
+fn request(host: &str, path: &str, method: &str) -> ResultDyn<String> {
     let mut stream = TcpStream::connect(host)?;
     let to_write = format!(
         "{method} {path} HTTP/1.1\r
@@ -65,9 +76,10 @@ Host: {host}\r
     let size = content_length.expect("No `content-length' in header");
     let mut buf = vec![0u8; size];
     reader.read_exact(&mut buf)?;
-    println!("{}", String::from_utf8_lossy(&buf));
+    let body = String::from_utf8_lossy(&buf).into();
+    println!("{body}");
 
-    Ok(())
+    Ok(body)
 }
 
 #[derive(Parser, Debug)]
