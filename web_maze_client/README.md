@@ -93,7 +93,7 @@ Stats {
 ```
 
 To validate the results are correct, use `WebMaze.Client.mean_variance` from
-the server.
+the server as specified in Test client `stats` command in `web_maze/README.md`.
 
 ## Debug
 

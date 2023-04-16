@@ -51,3 +51,17 @@ Generated using [phoenix_swagger](https://hexdocs.pm/phoenix_swagger/PhoenixSwag
 ```shell
 mix phx.swagger.generate
 ```
+
+### Test client `stats` command
+
+Open an IEx session and call `WebMaze.Client.mean_variance`
+
+```shell
+$ iex -S mix
+Erlang/OTP 25 [erts-13.2] [source] [64-bit] [smp:8:8] [ds:8:8:10] [async-threads:1] [jit] [dtrace]
+Interactive Elixir (1.14.4) - press Ctrl+C to exit (type h() ENTER for help)
+iex(1)> WebMaze.Client.mean_variance
+```
+
+The function returns a two-tuple, where the first element is the mean and
+the second element is the variance.
