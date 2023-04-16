@@ -5,7 +5,7 @@ defmodule WebMazeWeb.RunLive do
   alias WebMaze.Queries
 
   def mount(_params, _session, socket) do
-    {:ok, assign(socket, run: nil, finished: false)}
+    {:ok, assign(socket, run: nil, finished: false, queries: [])}
   end
 
   def render(assigns) do
@@ -22,12 +22,21 @@ defmodule WebMazeWeb.RunLive do
     <% else %>
     Running…
     <% end %></div>
+    <ol>
+    <%= for query <- @queries do %><li>
+    Query from <%= query.connection_source %> with port <%= query.connection_port %> to target port <%= query.query_target %>.
+    </li><% end %>
+    </ol>
     <% end %>
     """
   end
 
   def handle_info(:finished, socket) do
     {:noreply, assign(socket, finished: true)}
+  end
+
+  def handle_info({:query, query}, socket) do
+    {:noreply, update(socket, :queries, &[query | &1])}
   end
 
   def handle_event(
@@ -48,7 +57,8 @@ defmodule WebMazeWeb.RunLive do
         {:error, changeset} ->
           Logger.error("Error creating query with #{inspect(changeset)}")
 
-        {:ok, _} ->
+        {:ok, query} ->
+          send(me, {:query, query})
           :ok
       end
     end
