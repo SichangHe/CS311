@@ -38,6 +38,12 @@ export IP=67.159.95.167
 export PORT=51300
 ```
 
+## REST API documentation
+
+See [`localhost:4000/api/doc/`](localhost:4000/api/doc/).
+
+Generated using [phoenix_swagger](https://hexdocs.pm/phoenix_swagger/PhoenixSwagger.html).
+
 ## Development
 
 ### Update Swagger file
