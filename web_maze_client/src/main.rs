@@ -42,16 +42,19 @@ struct Args {
     #[command(subcommand)]
     cmd: Act,
 
+    /// Host server URL
     #[arg(short, long)]
     url: String,
 }
 
 #[derive(Parser, Debug)]
 enum Act {
+    /// Submit a new run
     Submit {
         #[arg(short, long)]
         id: String,
     },
+    /// List finished runs
     List {
         #[arg(short, long)]
         limit: Option<usize>,
@@ -59,6 +62,7 @@ enum Act {
         #[arg(short, long)]
         start: Option<usize>,
     },
+    /// Queries of a run
     Queries {
         #[arg(short, long)]
         run_id: String,
@@ -69,5 +73,6 @@ enum Act {
         #[arg(short, long)]
         start: Option<usize>,
     },
+    /// Mean and variance of numbers of queries of all finished runs
     Stats,
 }
