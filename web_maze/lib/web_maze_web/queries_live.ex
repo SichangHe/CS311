@@ -37,7 +37,7 @@ defmodule WebMazeWeb.QueriesLive do
     start = String.to_integer(start)
 
     if run_id == socket.assigns[:run_id] do
-      {:noreply, assign(socket, limit: limit, start: start)}
+      {:noreply, socket |> assign(limit: limit, start: start) |> clear_flash}
     else
       run = Queries.get_run!(run_id)
 
@@ -48,7 +48,10 @@ defmodule WebMazeWeb.QueriesLive do
         _ ->
           queries = Queries.queries_for_run(run)
 
-          {:noreply, assign(socket, run_id: run_id, limit: limit, start: start, queries: queries)}
+          {:noreply,
+           socket
+           |> assign(run_id: run_id, limit: limit, start: start, queries: queries)
+           |> clear_flash}
       end
     end
   rescue

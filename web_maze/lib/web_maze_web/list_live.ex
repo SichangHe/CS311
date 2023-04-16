@@ -34,7 +34,7 @@ defmodule WebMazeWeb.ListLive do
   def handle_event("list", %{"limit" => limit, "start" => start}, socket) do
     limit = String.to_integer(limit)
     start = String.to_integer(start)
-    {:noreply, assign(socket, limit: limit, start: start)}
+    {:noreply, socket |> assign(limit: limit, start: start) |> clear_flash}
   rescue
     ArgumentError ->
       {:noreply, put_flash(socket, :error, "Invalid parameters.")}
