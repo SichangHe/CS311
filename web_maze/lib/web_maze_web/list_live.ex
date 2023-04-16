@@ -37,8 +37,6 @@ defmodule WebMazeWeb.ListLive do
     {:noreply, assign(socket, limit: limit, start: start)}
   rescue
     ArgumentError ->
-      {:noreply,
-       socket
-       |> put_flash(:error, "Invalid parameters.")}
+      {:noreply, put_flash(socket, :error, "Invalid parameters.")}
   end
 end
