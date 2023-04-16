@@ -3,6 +3,7 @@ use log::debug;
 
 use web_maze_client::{
     request::{list, queries, submit},
+    stats::stats,
     ResultDyn,
 };
 
@@ -13,11 +14,11 @@ fn main() -> ResultDyn<()> {
     match args.cmd {
         Act::Submit { id } => {
             let submit_response = submit(&args.url, &id)?;
-            println!("\n{submit_response:#?}");
+            println!("{submit_response:#?}");
         }
         Act::List { limit, start } => {
             let list_response = list(&args.url, limit, start)?;
-            println!("\n{list_response:#?}");
+            println!("{list_response:#?}");
         }
         Act::Queries {
             run_id,
@@ -25,9 +26,12 @@ fn main() -> ResultDyn<()> {
             start,
         } => {
             let queries = queries(&args.url, &run_id, limit, start)?;
-            println!("\n{queries:#?}");
+            println!("{queries:#?}");
         }
-        Act::Stats => todo!(),
+        Act::Stats => {
+            let stats = stats(&args.url)?;
+            println!("{stats:#?}");
+        }
     }
     Ok(())
 }
