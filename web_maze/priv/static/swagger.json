@@ -1,5 +1,106 @@
 {
-  "definitions": {},
+  "definitions": {
+    "FinishedResponse": {
+      "description": "A paginated list of finished runs",
+      "properties": {
+        "limit": {
+          "description": "The number of items per page",
+          "type": "integer"
+        },
+        "next": {
+          "description": "The URL for the next page",
+          "type": "string"
+        },
+        "prev": {
+          "description": "The URL for the previous page",
+          "type": "string"
+        },
+        "runIds": {
+          "description": "An array of run IDs",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "start": {
+          "description": "The start index for pagination",
+          "type": "integer"
+        }
+      },
+      "title": "List of runs",
+      "type": "object"
+    },
+    "IndexResponse": {
+      "description": "A paginated list of queries for a given run",
+      "properties": {
+        "limit": {
+          "description": "The number of items per page",
+          "type": "integer"
+        },
+        "next": {
+          "description": "The URL for the next page",
+          "type": "string"
+        },
+        "prev": {
+          "description": "The URL for the previous page",
+          "type": "string"
+        },
+        "queries": {
+          "description": "The list of queries that belong to this run",
+          "items": {
+            "$ref": "#/definitions/Query"
+          },
+          "type": "array"
+        },
+        "runId": {
+          "description": "The ID of the run",
+          "type": "string"
+        },
+        "start": {
+          "description": "The start index for pagination",
+          "type": "integer"
+        }
+      },
+      "title": "Index Response",
+      "type": "object"
+    },
+    "Query": {
+      "properties": {
+        "connection_port": {
+          "description": "The connection port of the query",
+          "type": "integer"
+        },
+        "connection_source": {
+          "description": "The connection source of the query",
+          "type": "string"
+        },
+        "id": {
+          "description": "The ID of the query",
+          "type": "integer"
+        },
+        "query_target": {
+          "description": "The query target of the query",
+          "type": "integer"
+        },
+        "run_id": {
+          "description": "The ID of the run that this query belongs to",
+          "type": "integer"
+        }
+      },
+      "type": "object"
+    },
+    "RunResponse": {
+      "description": "Information about the run that was created",
+      "properties": {
+        "runId": {
+          "description": "The ID of the run",
+          "type": "string"
+        }
+      },
+      "title": "Run response",
+      "type": "object"
+    }
+  },
   "host": "localhost:4000",
   "info": {
     "description": "API Documentation for WebMaze server",
@@ -29,7 +130,10 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/FinishedResponse"
+            }
           },
           "400": {
             "description": "Bad Request: The limit must be 1 ~ 30!"
@@ -70,7 +174,10 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/IndexResponse"
+            }
           },
           "204": {
             "description": "No Content: Run not finished"
@@ -100,7 +207,10 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/RunResponse"
+            }
           }
         },
         "summary": "Run a query",

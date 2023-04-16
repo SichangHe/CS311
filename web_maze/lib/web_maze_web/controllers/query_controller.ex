@@ -18,7 +18,7 @@ defmodule WebMazeWeb.QueryController do
       limit(:query, :integer, "The number of items per page", required: false)
     end
 
-    response(200, "OK")
+    response(200, "OK", Schema.ref(:FinishedResponse))
     response(400, "Bad Request: The limit must be 1 ~ 30!")
   end
 
@@ -55,7 +55,7 @@ defmodule WebMazeWeb.QueryController do
       id(:path, :string, "The ID of the query to run", required: true)
     end
 
-    response(200, "OK")
+    response(200, "OK", Schema.ref(:RunResponse))
   end
 
   def run(conn, %{"id" => id}) do
@@ -102,7 +102,7 @@ defmodule WebMazeWeb.QueryController do
       limit(:query, :integer, "The number of items per page", required: false)
     end
 
-    response(200, "OK")
+    response(200, "OK", Schema.ref(:IndexResponse))
     response(204, "No Content: Run not finished")
     response(400, "Bad Request: The limit must be 1 ~ 30!")
   end
@@ -199,5 +199,56 @@ defmodule WebMazeWeb.QueryController do
       _ ->
         :error
     end
+  end
+
+  def swagger_definitions do
+    %{
+      FinishedResponse:
+        swagger_schema do
+          title("List of runs")
+          description("A paginated list of finished runs")
+
+          properties do
+            limit(:integer, "The number of items per page")
+            start(:integer, "The start index for pagination")
+            runIds(array(:string), "An array of run IDs")
+            prev(:string, "The URL for the previous page")
+            next(:string, "The URL for the next page")
+          end
+        end,
+      RunResponse:
+        swagger_schema do
+          title("Run response")
+          description("Information about the run that was created")
+
+          properties do
+            runId(:string, "The ID of the run")
+          end
+        end,
+      IndexResponse:
+        swagger_schema do
+          title("Index Response")
+          description("A paginated list of queries for a given run")
+
+          properties do
+            runId(:string, "The ID of the run")
+            limit(:integer, "The number of items per page")
+            start(:integer, "The start index for pagination")
+            queries(array(:Query), "The list of queries that belong to this run")
+            prev(:string, "The URL for the previous page")
+            next(:string, "The URL for the next page")
+          end
+        end,
+      Query:
+        swagger_schema do
+          properties do
+            id(:integer, "The ID of the query")
+            connection_source(:string, "The connection source of the query")
+            connection_port(:integer, "The connection port of the query")
+            query_target(:integer, "The query target of the query")
+            run_id(:integer, "The ID of the run that this query belongs to")
+          end
+        end
+    }
   end
 end
