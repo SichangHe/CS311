@@ -2,7 +2,7 @@ use clap::{arg, command, Parser};
 use log::debug;
 
 use web_maze_client::{
-    request::{list, submit},
+    request::{list, queries, submit},
     ResultDyn,
 };
 
@@ -18,6 +18,14 @@ fn main() -> ResultDyn<()> {
         Act::List { limit, start } => {
             let list_response = list(&args.url, limit, start)?;
             println!("\n{list_response:#?}");
+        }
+        Act::Queries {
+            run_id,
+            limit,
+            start,
+        } => {
+            let queries = queries(&args.url, &run_id, limit, start)?;
+            println!("\n{queries:#?}");
         }
         Act::Stats => todo!(),
     }
@@ -41,6 +49,16 @@ enum Act {
         id: String,
     },
     List {
+        #[arg(short, long)]
+        limit: Option<usize>,
+
+        #[arg(short, long)]
+        start: Option<usize>,
+    },
+    Queries {
+        #[arg(short, long)]
+        run_id: String,
+
         #[arg(short, long)]
         limit: Option<usize>,
 

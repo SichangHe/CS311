@@ -25,6 +25,24 @@ pub fn list(host: &str, limit: Option<usize>, start: Option<usize>) -> ResultDyn
     Ok(serde_json::from_str(&body)?)
 }
 
+pub fn queries(
+    host: &str,
+    run_id: &str,
+    limit: Option<usize>,
+    start: Option<usize>,
+) -> ResultDyn<response::Queries> {
+    let path = format!("/api/queries?run={run_id}");
+    let path = match (limit, start) {
+        (None, None) => path,
+        (Some(limit), None) => format!("{path}&limit={limit}"),
+        (None, Some(start)) => format!("{path}&start={start}"),
+        (Some(limit), Some(start)) => format!("{path}&limit={limit}&start={start}"),
+    };
+    let body = request(host, &path, "GET")?;
+
+    Ok(serde_json::from_str(&body)?)
+}
+
 pub fn request(host: &str, path: &str, method: &str) -> ResultDyn<String> {
     let mut stream = TcpStream::connect(host)?;
     let to_write = format!(
