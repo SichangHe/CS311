@@ -38,11 +38,28 @@ export IP=67.159.95.167
 export PORT=51300
 ```
 
-## REST API documentation
+## Features
 
-See [`localhost:4000/api/doc/`](localhost:4000/api/doc/).
+### Web interface equivalent to API
+
+All the web interface pages are written using Phoenix LiveView.
+The users are asked to fill in the parameters in the forms and submit them.
+
+Submitting the forms do not trigger full reloads but instead update as needed.
+
+- `/api/run/:id` => [`/run`](http://localhost:4000/run).
+
+    The queries and the run status are live updated.
+- `/api/queries` => [`/queries`](http://localhost:4000/queries).
+- `/api/list` => [`/list`](http://localhost:4000/list).
+
+### REST API documentation
+
+See [`/api/doc/`](http://localhost:4000/api/doc/).
 
 Generated using [phoenix_swagger](https://hexdocs.pm/phoenix_swagger/PhoenixSwagger.html).
+
+Note that the web page might take 1min to load due to bugs from Swagger.
 
 ## Development
 

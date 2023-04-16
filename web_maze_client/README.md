@@ -6,7 +6,7 @@
 
 ## Run
 
-In this directory, run `cargo r --` with the arguments.
+In this directory, run `cargo r --` followed by the arguments.
 
 Results are deserialized into Rust structs for readability.
 
