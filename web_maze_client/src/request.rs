@@ -5,7 +5,25 @@ use std::{
 
 use log::debug;
 
-use crate::ResultDyn;
+use crate::{response, ResultDyn};
+
+pub fn submit(host: &str, id: &str) -> ResultDyn<response::Submit> {
+    let body = request(host, &format!("/api/run/{id}"), "POST")?;
+    Ok(serde_json::from_str(&body)?)
+}
+
+pub fn list(host: &str, limit: Option<usize>, start: Option<usize>) -> ResultDyn<response::List> {
+    let path = "/api/list".to_owned();
+    let path = match (limit, start) {
+        (None, None) => path,
+        (Some(limit), None) => format!("{path}?limit={limit}"),
+        (None, Some(start)) => format!("{path}?start={start}"),
+        (Some(limit), Some(start)) => format!("{path}?limit={limit}&start={start}"),
+    };
+    let body = request(host, &path, "GET")?;
+
+    Ok(serde_json::from_str(&body)?)
+}
 
 pub fn request(host: &str, path: &str, method: &str) -> ResultDyn<String> {
     let mut stream = TcpStream::connect(host)?;
