@@ -1,11 +1,26 @@
 defmodule WebMazeWeb.QueryController do
   use WebMazeWeb, :controller
+  use PhoenixSwagger
   require Logger
 
   alias WebMaze.Queries
   alias WebMaze.Queries.Query
 
   action_fallback WebMazeWeb.FallbackController
+
+  swagger_path :finished do
+    get("/api/list")
+    summary("List finished runs")
+    description("Returns a list of finished runs with pagination")
+
+    parameters do
+      start(:query, :integer, "The start index for pagination", required: false)
+      limit(:query, :integer, "The number of items per page", required: false)
+    end
+
+    response(200, "OK")
+    response(400, "Bad Request: The limit must be 1 ~ 30!")
+  end
 
   def finished(conn, params) do
     case limit_start(params) do
@@ -31,8 +46,21 @@ defmodule WebMazeWeb.QueryController do
     end
   end
 
+  swagger_path :run do
+    post("/api/run/{id}")
+    summary("Run a query")
+    description("Runs a query with the given ID")
+
+    parameters do
+      id(:path, :string, "The ID of the query to run", required: true)
+    end
+
+    response(200, "OK")
+  end
+
   def run(conn, %{"id" => id}) do
     {:ok, run} = Queries.create_run(%{name: id})
+
     query_call = fn connection_source, connection_port, query_target ->
       case Queries.create_query(%{
              connection_source: connection_source,
@@ -61,6 +89,22 @@ defmodule WebMazeWeb.QueryController do
     DynamicSupervisor.start_child(NetMaze.Supervisor, {NetMaze.GenServer, args})
 
     render(conn, "run.json", run: run)
+  end
+
+  swagger_path :index do
+    get("/api/queries")
+    summary("List queries for a run")
+    description("Returns a list of queries for a given run with pagination")
+
+    parameters do
+      run(:query, :string, "The run ID list queries for", required: true)
+      start(:query, :integer, "The start index for pagination", required: false)
+      limit(:query, :integer, "The number of items per page", required: false)
+    end
+
+    response(200, "OK")
+    response(204, "No Content: Run not finished")
+    response(400, "Bad Request: The limit must be 1 ~ 30!")
   end
 
   def index(conn, %{"run" => run_id} = params) do

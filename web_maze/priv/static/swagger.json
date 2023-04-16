@@ -1,0 +1,123 @@
+{
+  "definitions": {},
+  "host": "localhost:4000",
+  "info": {
+    "description": "API Documentation for WebMaze server",
+    "title": "WebMaze API",
+    "version": "0.1"
+  },
+  "paths": {
+    "/api/list": {
+      "get": {
+        "description": "Returns a list of finished runs with pagination",
+        "operationId": "WebMazeWeb.QueryController.finished",
+        "parameters": [
+          {
+            "description": "The start index for pagination",
+            "in": "query",
+            "name": "start",
+            "required": false,
+            "type": "integer"
+          },
+          {
+            "description": "The number of items per page",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request: The limit must be 1 ~ 30!"
+          }
+        },
+        "summary": "List finished runs",
+        "tags": [
+          "Query"
+        ]
+      }
+    },
+    "/api/queries": {
+      "get": {
+        "description": "Returns a list of queries for a given run with pagination",
+        "operationId": "WebMazeWeb.QueryController.index",
+        "parameters": [
+          {
+            "description": "The run ID list queries for",
+            "in": "query",
+            "name": "run",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "description": "The start index for pagination",
+            "in": "query",
+            "name": "start",
+            "required": false,
+            "type": "integer"
+          },
+          {
+            "description": "The number of items per page",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "204": {
+            "description": "No Content: Run not finished"
+          },
+          "400": {
+            "description": "Bad Request: The limit must be 1 ~ 30!"
+          }
+        },
+        "summary": "List queries for a run",
+        "tags": [
+          "Query"
+        ]
+      }
+    },
+    "/api/run/{id}": {
+      "post": {
+        "description": "Runs a query with the given ID",
+        "operationId": "WebMazeWeb.QueryController.run",
+        "parameters": [
+          {
+            "description": "The ID of the query to run",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "summary": "Run a query",
+        "tags": [
+          "Query"
+        ]
+      }
+    }
+  },
+  "produces": [
+    "application/json"
+  ],
+  "schemes": [
+    "http",
+    "https",
+    "ws",
+    "wss"
+  ],
+  "swagger": "2.0"
+}

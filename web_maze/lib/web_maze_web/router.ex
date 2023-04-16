@@ -29,6 +29,24 @@ defmodule WebMazeWeb.Router do
     resources "/queries", QueryController, except: [:new, :edit]
   end
 
+  scope "/api/doc" do
+    forward "/", PhoenixSwagger.Plug.SwaggerUI,
+      otp_app: :web_maze,
+      swagger_file: "swagger.json"
+  end
+
+  def swagger_info do
+    %{
+      schemes: ["http", "https", "ws", "wss"],
+      info: %{
+        version: "0.1",
+        title: "WebMaze API",
+        description: "API Documentation for WebMaze server"
+      },
+      produces: ["application/json"]
+    }
+  end
+
   # Enables LiveDashboard only for development
   #
   # If you want to use the LiveDashboard in production, you should put

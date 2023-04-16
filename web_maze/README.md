@@ -37,3 +37,11 @@ the corresponding environment variables.
 export IP=67.159.95.167
 export PORT=51300
 ```
+
+## Development
+
+### Update Swagger file
+
+```shell
+mix phx.swagger.generate
+```
