@@ -19,6 +19,7 @@ defmodule WebMazeWeb.Router do
 
     get "/", PageController, :index
     live "/run", RunLive
+    live "/list", ListLive
   end
 
   # Other scopes may use custom stacks.

@@ -39,11 +39,7 @@ defmodule WebMazeWeb.RunLive do
     {:noreply, update(socket, :queries, &[query | &1])}
   end
 
-  def handle_event(
-        "run",
-        %{"id" => id},
-        socket
-      ) do
+  def handle_event("run", %{"id" => id}, socket) do
     {:ok, run} = Queries.create_run(%{name: id})
     me = self()
 
