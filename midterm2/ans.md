@@ -78,8 +78,11 @@ Answer the questions below. Justify your answers.
     so other monetary factors need to be considered.
 
 2. Each router periodically transmits its AS-path to all its neighbors.
+    (Feedback: Not periodic. BGP is stateful.)
 
     Each router uses the AS-path for forwarding.
+    (Feedback: Only the next hop is needed for forwarding.
+    The AS-path is useful in loop detection and policies.)
 
 3. Network switches connect links of the same type,
     so they use link-layer address.
@@ -117,6 +120,23 @@ Consider the network below with three switches and four computers. Consider that
     |Right|3|1|1|0|B → D|
     |Right|1|0|3|0|D → A|
 
+    *Feedback*:
+
+    |Switch|input port|input circuit|output port|output circuit|route for|
+    |-|-|-|-|-|-|
+    |Left|2|0|3|0|A → C|
+    |Left|3|0|1|0|C → B|
+    |Left|1|0|3|1|B → D|
+    |Left|3|1|2|1|D → A|
+    |Middle|1|0|2|0|A → C|
+    |Middle|2|0|1|0|C → B|
+    |Middle|1|1|2|1|B → D|
+    |Middle|2|1|1|1|D → A|
+    |Right|3|0|2|0|A → C|
+    |Right|2|0|3|0|C → B|
+    |Right|3|1|1|0|B → D|
+    |Right|1|0|3|1|D → A|
+
 2. Example: A → B
 
     |Switch|input port|input circuit|output port|output circuit|route for|
@@ -141,8 +161,12 @@ are $4\times 2^{32-24}=2^{10}$ addresses.
 
 So, 200.128.48.0/21 has two times more addresses than the former option,
 and therefore should be more adequate.
+(Feedback: But this will waste address as 1024 are enough.)
 
 On the flip side,
 since the latter is in one large chunk instead of 4 smaller chunks,
 MiniTelecom might more likely divide the allocation into larger chunks and
 run out of IPs sooner, ironically.
+(Feedback: Ok. Depends on the management policies.
+
+One large chunk avoids bloating the global routing table.)
