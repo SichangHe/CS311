@@ -63,7 +63,7 @@ TCPConnection in HTML5 spec
 
 - Opening handshake
 - Messages
-- Closing handshake
+- Closing handshake: each side send one Close frames
 
 <!-- slide -->
 ### Opening handshake
@@ -76,9 +76,6 @@ TCPConnection in HTML5 spec
     Connection: Upgrade
     Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==
     ```
-
-- <!-- .fragment -->
-    Use `Upgrade` and `Connection` to specify WebSocket
 
 <!-- slide -->
 - Server respond 101 Switching Protocols
@@ -98,9 +95,10 @@ TCPConnection in HTML5 spec
 <!-- slide -->
 ### Messages
 
-- <!-- .fragment -->Messages are units of data transferred
-- <!-- .fragment -->Payload sent from client always masked for security;
-    payload sent from server never masked
+Units of data transferred
+
+- <!-- .fragment -->Payload from client always masked;
+    payload from server never masked
 - <!-- .fragment -->
     WebSocket framing protocol
     ([source](https://www.rfc-editor.org/rfc/rfc6455#section-5.2))
@@ -111,8 +109,6 @@ TCPConnection in HTML5 spec
 <!-- slide -->
 #### WebSocket framing protocol
 
-- <!-- .fragment -->
-    `FIN`: `0b1` for final fragment in message
 - <!-- .fragment -->
     `Opcode`: 4-bit operation code for frame type/ ping/ connection close
 - <!-- .fragment -->
@@ -131,15 +127,6 @@ TCPConnection in HTML5 spec
 - <!-- .fragment -->
     4B or 8B for 126B ~ 256kiB payload\
     ⇒ 0.006% ~ 6.3% overhead
-
-<!-- slide -->
-### Closing handshake
-
-- <!-- .fragment -->To actively close the connection,
-    send a Close frame and wait for the other side to reply with a Close frame
-- <!-- .fragment -->When received the first Close frame,
-    reply with another Close frame and close the connection
-- <!-- .fragment -->Complement TCP closing handshake
 
 <!-- slide -->
 ## Usage
