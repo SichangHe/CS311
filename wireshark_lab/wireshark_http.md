@@ -130,3 +130,16 @@ See <https://stackoverflow.com/questions/13789855/safari-not-sending-if-modified
     The GET request for the JPEG file is sent after the response to the GET
     request for the PNG file is received,
     so the PNG is fully downloaded first, and then the JPEG is requested.
+
+## HTTP Authentication
+
+(Questions 18 ~ 19)
+
+1. What is the server’s response (status code and phrase) in response to the
+    initial HTTP GET message from your browser?
+
+    "401 Unauthorized"
+1. When your browser’s sends the HTTP GET message for the second time, what
+    new field is included in the HTTP GET message?
+
+    "Authorization"
