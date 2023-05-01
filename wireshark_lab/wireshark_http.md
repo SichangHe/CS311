@@ -57,17 +57,29 @@
     the server.
     Do you see an “IF-MODIFIED-SINCE:” line in the HTTP GET?
 
-    No.
+    Yes.
+
     If so, what information follows the “IF-MODIFIED-SINCE:” header?
+
+    "Sun, 30 Apr 2023 05:59:01 GMT"
 1. What is the HTTP status code and phrase returned from the server in response
     to this second HTTP GET?
 
-    "200 OK"
+    "304 Not Modified"
+
     Did the server explicitly return the contents of the file?
 
-    Yes.
+    No.
+
     Explain.
 
-    When I refresh, I force the browser to fetch the HTML file again.
-    Since the browser sent the same request as the first time,
-    the server responded similarly.
+    When I refreshed the page, Firefox sent a new request with the
+    "If-Modified-Since" header that contains the time in "Last-Modified" in the
+    last server response.
+    The server got the request, checked the "If-Modified-Since" and found out
+    that the content does not need to be updated,
+    so it returned "304 Not Modified."
+    Firefox got the 304 response and kept using the old cached page.
+
+*Note*: Safari does not send "If-Modified-Since" on refresh.
+See <https://stackoverflow.com/questions/13789855/safari-not-sending-if-modified-since-and-if-none-match-headers>.
