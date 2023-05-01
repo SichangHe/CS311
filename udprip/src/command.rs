@@ -4,7 +4,11 @@ use anyhow::{bail, Context, Result};
 use log::debug;
 use tokio::sync::mpsc::{Receiver, Sender};
 
-pub async fn handle(mut cmd_receiver: Receiver<String>, response_sender: Sender<String>) {
+pub async fn handle(
+    mut cmd_receiver: Receiver<String>,
+    response_sender: Sender<String>,
+    route_sender: Sender<Command>,
+) {
     while let Some(buf) = cmd_receiver.recv().await {
         let input = buf.trim();
         // Ignore empty input.
@@ -19,8 +23,17 @@ pub async fn handle(mut cmd_receiver: Receiver<String>, response_sender: Sender<
         match Command::parse(input) {
             Ok(cmd) => {
                 debug!("Parsed command: `{cmd:?}`.");
-                if let Command::Quit = cmd {
-                    exit(0);
+                match cmd {
+                    Command::Add { ip: _, weight: _ } => route_sender
+                        .send(cmd)
+                        .await
+                        .expect("Route receiver cclosed."),
+                    Command::Del { ip: _ } => route_sender
+                        .send(cmd)
+                        .await
+                        .expect("Route receiver cclosed."),
+                    Command::Trace { ip: _ } => todo!(),
+                    Command::Quit => exit(0),
                 }
                 response_sender
                     .send("".into())

@@ -1,4 +1,5 @@
 pub mod command;
+pub mod route;
 
 use std::{
     fs::File,
@@ -13,6 +14,8 @@ use log::debug;
 use rustyline::error::ReadlineError;
 use tokio::{spawn, sync::mpsc::channel};
 
+use crate::route::manage;
+
 #[tokio::main]
 async fn main() {
     env_logger::init();
@@ -20,7 +23,9 @@ async fn main() {
     debug!("{args:?}");
     let (cmd_sender, cmd_receiver) = channel(1);
     let (response_sender, mut response_receiver) = channel(2);
-    let _command_handle = spawn(handle(cmd_receiver, response_sender));
+    let (route_sender, route_receiver) = channel(8);
+    let _command_handle = spawn(handle(cmd_receiver, response_sender, route_sender));
+    let _route_manager = spawn(manage(route_receiver));
     // Read `startup` file.
     if let Some(path) = args.startup {
         let file = File::open(path).expect("Failed to open startup file.");
