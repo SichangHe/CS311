@@ -1,22 +1,34 @@
 pub mod command;
 
-use std::io::stdin;
-
 use command::handle;
+use rustyline::error::ReadlineError;
 use tokio::{spawn, sync::mpsc::channel};
 
 #[tokio::main]
 async fn main() {
     env_logger::init();
-    let stdin = stdin();
+    let mut editor = rustyline::DefaultEditor::new().expect("Failed to initialize RustyLine");
     let (cmd_sender, cmd_receiver) = channel(0xFFF);
-    let _command_handle = spawn(handle(cmd_receiver));
+    let (response_sender, mut response_receiver) = channel(2);
+    let _command_handle = spawn(handle(cmd_receiver, response_sender));
     loop {
-        let mut buf = String::new();
-        stdin.read_line(&mut buf).expect("Error reading Stdin.");
-        cmd_sender
-            .send(buf)
-            .await
-            .expect("Command handle is closed.");
+        match editor.readline("> ") {
+            Ok(buf) => {
+                if let Err(err) = editor.add_history_entry(&buf) {
+                    println!("{err}");
+                }
+                cmd_sender
+                    .send(buf)
+                    .await
+                    .expect("Command handle is closed.");
+                let response = response_receiver
+                    .recv()
+                    .await
+                    .expect("Response sender closed.");
+                println!("{response}")
+            }
+            Err(ReadlineError::Interrupted) | Err(ReadlineError::Eof) => break,
+            Err(err) => println!("{err}"),
+        }
     }
 }

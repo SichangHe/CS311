@@ -2,9 +2,9 @@ use std::{net::IpAddr, process::exit, str::FromStr};
 
 use anyhow::{bail, Context, Result};
 use log::debug;
-use tokio::sync::mpsc::Receiver;
+use tokio::sync::mpsc::{Receiver, Sender};
 
-pub async fn handle(mut cmd_receiver: Receiver<String>) {
+pub async fn handle(mut cmd_receiver: Receiver<String>, response_sender: Sender<String>) {
     while let Some(buf) = cmd_receiver.recv().await {
         let input = buf.trim();
         // Ignore empty input.
@@ -18,10 +18,15 @@ pub async fn handle(mut cmd_receiver: Receiver<String>) {
                 if let Command::Quit = cmd {
                     exit(0);
                 }
+                response_sender
+                    .send("".into())
+                    .await
+                    .expect("Response receiver closed.");
             }
-            Err(err) => {
-                println!("{err}")
-            }
+            Err(err) => response_sender
+                .send(err.to_string())
+                .await
+                .expect("Response receiver closed."),
         }
     }
 }
