@@ -5,12 +5,12 @@
 1. Is your browser running HTTP version 1.0 or 1.1?
     What version of HTTP is the server running?
 
-    My browser runs HTTP 1.1.
-    The server runs HTTP 1.1.
+    We are both running HTTP 1.1.
 1. What languages (if any) does your browser indicate that it can accept to the
     server?
 
-    "en-US,en;q=0.9": meaning that my browser indicates that it accepts US
+    "en-US,en;q=0.9"\
+    meaning that my browser indicates that it accepts US
     English or English with weight 0.9.
 1. What is the IP address of your computer?
 
