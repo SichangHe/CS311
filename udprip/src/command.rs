@@ -1,6 +1,6 @@
-use std::{net::IpAddr, process::exit, str::FromStr};
+use std::{net::IpAddr, process::exit};
 
-use anyhow::{bail, Context, Result};
+use clap::Parser;
 use log::debug;
 use tokio::sync::mpsc::Receiver;
 
@@ -18,8 +18,11 @@ pub async fn handle(mut cmd_receiver: Receiver<String>, senders: Senders) {
                 .expect("Response receiver closed.");
             continue;
         }
-        debug!("Received command `{}`.", buf.trim());
-        match Command::parse(input) {
+        debug!("Received command `{input}`.");
+        // Provide first command to Clap.
+        let mut clap_input = vec![""];
+        clap_input.extend(input.split_whitespace());
+        match Command::try_parse_from(clap_input) {
             Ok(cmd) => {
                 debug!("Parsed command: `{cmd:?}`.");
                 match cmd {
@@ -51,42 +54,21 @@ pub async fn handle(mut cmd_receiver: Receiver<String>, senders: Senders) {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Parser)]
 pub enum Command {
-    Add { ip: IpAddr, weight: usize },
-    Del { ip: IpAddr },
-    Trace { ip: IpAddr },
+    Add {
+        #[arg(index = 1)]
+        ip: IpAddr,
+        #[arg(index = 2)]
+        weight: usize,
+    },
+    Del {
+        #[arg(index = 1)]
+        ip: IpAddr,
+    },
+    Trace {
+        #[arg(index = 1)]
+        ip: IpAddr,
+    },
     Quit,
-}
-
-impl Command {
-    /// Parse trimmed, non-empty `input`.
-    pub fn parse(input: &str) -> Result<Self> {
-        let mut args = input.split_whitespace();
-        match args.next().unwrap() {
-            "add" => {
-                let ip_str = args.next().context("Missing ip for add command.")?;
-                let ip = IpAddr::from_str(ip_str)?;
-                let weight = args
-                    .next()
-                    .context("Missing weight for add command.")?
-                    .parse()?;
-                Ok(Self::Add { ip, weight })
-            }
-            "del" => {
-                let ip_str = args.next().context("Missing ip for del command.")?;
-                let ip = IpAddr::from_str(ip_str)?;
-                Ok(Self::Del { ip })
-            }
-            "trace" => {
-                let ip_str = args.next().context("Missing ip for trace command.")?;
-                let ip = IpAddr::from_str(ip_str)?;
-                Ok(Self::Trace { ip })
-            }
-            "quit" => Ok(Self::Quit),
-            other => {
-                bail!("{other} is not a valid command.")
-            }
-        }
-    }
 }
