@@ -7,6 +7,7 @@ use tokio::{spawn, sync::mpsc::channel};
 
 #[tokio::main]
 async fn main() {
+    env_logger::init();
     let stdin = stdin();
     let (cmd_sender, cmd_receiver) = channel(0xFFF);
     let _command_handle = spawn(handle(cmd_receiver));
