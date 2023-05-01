@@ -107,3 +107,26 @@ See <https://stackoverflow.com/questions/13789855/safari-not-sending-if-modified
     response and the text of the Bill of Rights?
 
     4: Frame 108, 109, 110, and 111.
+
+## HTML Documents with Embedded Objects
+
+(Questions 16 ~ 17)
+
+1. How many HTTP GET request messages did your browser send?
+
+    3 GET requests.
+
+    To which Internet addresses were these GET requests sent?
+    - <http://gaia.cs.umass.edu/wireshark-labs/HTTP-wireshark-file4.html>
+    - <http://gaia.cs.umass.edu/pearson.png>
+    - <http://kurose.cslash.net/8E_cover_small.jpg>
+1. Can you tell whether your browser downloaded the two images serially,
+    or whether they were downloaded from the two web sites in parallel?
+
+    I can tell that Firefox downloaded the two images serially.
+
+    Explain.
+
+    The GET request for the JPEG file is sent after the response to the GET
+    request for the PNG file is received,
+    so the PNG is fully downloaded first, and then the JPEG is requested.
