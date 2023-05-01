@@ -1,4 +1,4 @@
-use std::{net::IpAddr, str::FromStr};
+use std::{net::IpAddr, process::exit, str::FromStr};
 
 use anyhow::{bail, Context, Result};
 use log::debug;
@@ -14,7 +14,10 @@ pub async fn handle(mut cmd_receiver: Receiver<String>) {
         debug!("Received command `{}`.", buf.trim());
         match Command::parse(input) {
             Ok(cmd) => {
-                debug!("Parsed command: `{cmd:?}`.")
+                debug!("Parsed command: `{cmd:?}`.");
+                if let Command::Quit = cmd {
+                    exit(0);
+                }
             }
             Err(err) => {
                 println!("{err}")
@@ -27,6 +30,8 @@ pub async fn handle(mut cmd_receiver: Receiver<String>) {
 pub enum Command {
     Add { ip: IpAddr, weight: usize },
     Del { ip: IpAddr },
+    Trace { ip: IpAddr },
+    Quit,
 }
 
 impl Command {
@@ -48,6 +53,12 @@ impl Command {
                 let ip = IpAddr::from_str(ip_str)?;
                 Ok(Self::Del { ip })
             }
+            "trace" => {
+                let ip_str = args.next().context("Missing ip for trace command.")?;
+                let ip = IpAddr::from_str(ip_str)?;
+                Ok(Self::Trace { ip })
+            }
+            "quit" => Ok(Self::Quit),
             other => {
                 bail!("{other} is not a valid command.")
             }
