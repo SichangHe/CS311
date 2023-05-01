@@ -35,3 +35,39 @@
 
     Yes. For example, the IP header "Protocol: TCP (6)" is not shown in the
     packet-listing window.
+
+## The HTTP CONDITIONAL GET/response interaction
+
+(Questions 8 ~ 11)
+
+1. Inspect the contents of the first HTTP GET request from your browser to the
+    server.
+    Do you see an “IF-MODIFIED-SINCE” line in the HTTP GET?
+
+    No.
+1. Inspect the contents of the server response.
+    Did the server explicitly return the contents of the file?
+
+    Yes.
+
+    How can you tell?
+
+    I can tell because I get 10 lines of "Line-based text data."
+1. Now inspect the contents of the second HTTP GET request from your browser to
+    the server.
+    Do you see an “IF-MODIFIED-SINCE:” line in the HTTP GET?
+
+    No.
+    If so, what information follows the “IF-MODIFIED-SINCE:” header?
+1. What is the HTTP status code and phrase returned from the server in response
+    to this second HTTP GET?
+
+    "200 OK"
+    Did the server explicitly return the contents of the file?
+
+    Yes.
+    Explain.
+
+    When I refresh, I force the browser to fetch the HTML file again.
+    Since the browser sent the same request as the first time,
+    the server responded similarly.
