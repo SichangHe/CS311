@@ -2,18 +2,17 @@ use std::{net::IpAddr, process::exit, str::FromStr};
 
 use anyhow::{bail, Context, Result};
 use log::debug;
-use tokio::sync::mpsc::{Receiver, Sender};
+use tokio::sync::mpsc::Receiver;
 
-pub async fn handle(
-    mut cmd_receiver: Receiver<String>,
-    response_sender: Sender<String>,
-    route_sender: Sender<Command>,
-) {
+use crate::channel::Senders;
+
+pub async fn handle(mut cmd_receiver: Receiver<String>, senders: Senders) {
     while let Some(buf) = cmd_receiver.recv().await {
         let input = buf.trim();
         // Ignore empty input.
         if input.is_empty() {
-            response_sender
+            senders
+                .response
                 .send("".into())
                 .await
                 .expect("Response receiver closed.");
@@ -24,23 +23,27 @@ pub async fn handle(
             Ok(cmd) => {
                 debug!("Parsed command: `{cmd:?}`.");
                 match cmd {
-                    Command::Add { ip: _, weight: _ } => route_sender
+                    Command::Add { ip: _, weight: _ } => senders
+                        .route
                         .send(cmd)
                         .await
                         .expect("Route receiver cclosed."),
-                    Command::Del { ip: _ } => route_sender
+                    Command::Del { ip: _ } => senders
+                        .route
                         .send(cmd)
                         .await
                         .expect("Route receiver cclosed."),
                     Command::Trace { ip: _ } => todo!(),
                     Command::Quit => exit(0),
                 }
-                response_sender
+                senders
+                    .response
                     .send("".into())
                     .await
                     .expect("Response receiver closed.");
             }
-            Err(err) => response_sender
+            Err(err) => senders
+                .response
                 .send(err.to_string())
                 .await
                 .expect("Response receiver closed."),

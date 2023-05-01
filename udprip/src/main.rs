@@ -1,3 +1,4 @@
+pub mod channel;
 pub mod command;
 pub mod route;
 
@@ -14,17 +15,22 @@ use log::debug;
 use rustyline::error::ReadlineError;
 use tokio::{spawn, sync::mpsc::channel};
 
-use crate::route::manage;
+use crate::{channel::Senders, route::manage};
 
 #[tokio::main]
 async fn main() {
     env_logger::init();
     let args = Args::parse();
     debug!("{args:?}");
-    let (cmd_sender, cmd_receiver) = channel(1);
-    let (response_sender, mut response_receiver) = channel(2);
-    let (route_sender, route_receiver) = channel(8);
-    let _command_handle = spawn(handle(cmd_receiver, response_sender, route_sender));
+    let (cmd, cmd_receiver) = channel(1);
+    let (response, mut response_receiver) = channel(2);
+    let (route, route_receiver) = channel(8);
+    let senders = Senders {
+        cmd,
+        response,
+        route,
+    };
+    let _command_handle = spawn(handle(cmd_receiver, senders.clone()));
     let _route_manager = spawn(manage(route_receiver));
     // Read `startup` file.
     if let Some(path) = args.startup {
@@ -32,7 +38,8 @@ async fn main() {
         let reader = BufReader::new(file);
         for line in reader.lines() {
             let line = line.expect("Error reading lines in startup file.");
-            cmd_sender
+            senders
+                .cmd
                 .send(line)
                 .await
                 .expect("Command handle is closed.");
@@ -52,7 +59,8 @@ async fn main() {
                 if let Err(err) = editor.add_history_entry(&buf) {
                     println!("{err}");
                 }
-                cmd_sender
+                senders
+                    .cmd
                     .send(buf)
                     .await
                     .expect("Command handle is closed.");
