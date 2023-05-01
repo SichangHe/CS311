@@ -83,3 +83,27 @@
 
 *Note*: Safari does not send "If-Modified-Since" on refresh.
 See <https://stackoverflow.com/questions/13789855/safari-not-sending-if-modified-since-and-if-none-match-headers>.
+
+## Retrieving Long Documents
+
+(Questions 12 ~ 15)
+
+1. How many HTTP GET request messages did your browser send?
+
+    One.
+
+    Which packet number in the trace contains the GET message for the Bill or
+    Rights?
+
+    "101"
+1. Which packet number in the trace contains the status code and phrase
+    associated with the response to the HTTP GET request?
+
+    "111"
+1. What is the status code and phrase in the response?
+
+    "200 OK"
+1. How many data-containing TCP segments were needed to carry the single HTTP
+    response and the text of the Bill of Rights?
+
+    4: Frame 108, 109, 110, and 111.
