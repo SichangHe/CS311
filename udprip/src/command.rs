@@ -9,6 +9,10 @@ pub async fn handle(mut cmd_receiver: Receiver<String>, response_sender: Sender<
         let input = buf.trim();
         // Ignore empty input.
         if input.is_empty() {
+            response_sender
+                .send("".into())
+                .await
+                .expect("Response receiver closed.");
             continue;
         }
         debug!("Received command `{}`.", buf.trim());
