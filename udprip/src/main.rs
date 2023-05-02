@@ -10,6 +10,7 @@ use std::{
     net::IpAddr,
     path::{Path, PathBuf},
     process::exit,
+    time::Duration,
 };
 
 use clap::Parser;
@@ -27,6 +28,7 @@ use crate::{channel::Senders, message::listen, route::manage, socket::bind};
 async fn main() {
     env_logger::init();
     let args = Args::parse();
+    let period = Duration::from_millis(args.period);
     debug!("{args:?}");
     let (cmd, cmd_receiver) = channel(1);
     let (response, mut response_receiver) = channel(2);
@@ -42,7 +44,12 @@ async fn main() {
     };
     let _socket = spawn(bind(args.address, senders.clone(), send_receiver));
     let _command_handle = spawn(handle(args.address, cmd_receiver, senders.clone()));
-    let _route_manager = spawn(manage(args.address, senders.clone(), route_receiver));
+    let _route_manager = spawn(manage(
+        args.address,
+        period,
+        senders.clone(),
+        route_receiver,
+    ));
     let _msg_listener = spawn(listen(args.address, msg_receiver, senders.clone()));
     if let Some(path) = args.startup {
         startup_file(&path, &senders, &mut response_receiver).await;
@@ -98,7 +105,7 @@ struct Args {
     #[arg(index = 1)]
     address: IpAddr,
     #[arg(index = 2)]
-    period: f64,
+    period: u64,
     #[arg(index = 3)]
     startup: Option<PathBuf>,
 }

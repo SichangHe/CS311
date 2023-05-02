@@ -1,14 +1,25 @@
 use log::debug;
 use rand::seq::SliceRandom;
-use std::{cmp::Ordering, collections::BTreeMap, net::IpAddr};
-use tokio::sync::mpsc::Receiver;
+use std::{cmp::Ordering, collections::BTreeMap, net::IpAddr, time::Duration};
+use tokio::{
+    spawn,
+    sync::mpsc::{channel, Receiver, Sender},
+    time::timeout,
+};
 
 use crate::{channel::Senders, message::Message, socket::Send};
 
-pub async fn manage(addr: IpAddr, senders: Senders, mut cmd_receiver: Receiver<Route>) {
+pub async fn manage(
+    addr: IpAddr,
+    period: Duration,
+    senders: Senders,
+    mut cmd_receiver: Receiver<Route>,
+) {
     let mut accept = BTreeMap::new();
     let mut peer: BTreeMap<_, BTreeMap<_, _>> = BTreeMap::new();
     let mut next = BTreeMap::new();
+    let (notify_sender, notify_receiver) = channel(2);
+    let _time_notify = spawn(time_notify(period, senders.clone(), notify_receiver));
     while let Some(route) = cmd_receiver.recv().await {
         debug!("Route: {route:#?}");
         match route {
@@ -16,19 +27,28 @@ pub async fn manage(addr: IpAddr, senders: Senders, mut cmd_receiver: Receiver<R
                 accept.insert(ip, weight);
                 debug!("`accept` is now {accept:#?}");
                 next = calculate_next(&accept, &peer);
-                notify(addr, &accept, &next, &senders).await;
+                notify(addr, &accept, &next, &senders, &notify_sender).await;
             }
             Route::Del { ip } => {
                 accept.remove(&ip);
                 debug!("`accept` is now {accept:#?}");
                 next = calculate_next(&accept, &peer);
-                notify(addr, &accept, &next, &senders).await;
+                notify(addr, &accept, &next, &senders, &notify_sender).await;
             }
             Route::Update { source, distances } => {
                 peer.insert(source, distances);
                 next = calculate_next(&accept, &peer);
             }
             Route::Forward { msg } => send(&next, &msg.destination.clone(), msg, &senders).await,
+            Route::Notify => notify(addr, &accept, &next, &senders, &notify_sender).await,
+        }
+    }
+}
+
+async fn time_notify(period: Duration, senders: Senders, mut notify_receiver: Receiver<()>) {
+    loop {
+        if (timeout(period, notify_receiver.recv()).await).is_err() {
+            senders.route(Route::Notify).await;
         }
     }
 }
@@ -58,7 +78,12 @@ async fn notify(
     accept: &BTreeMap<IpAddr, usize>,
     next: &BTreeMap<IpAddr, (usize, Vec<IpAddr>)>,
     senders: &Senders,
+    notify_sender: &Sender<()>,
 ) {
+    notify_sender
+        .send(())
+        .await
+        .expect("Notify receiver closed.");
     for &to in accept.keys() {
         let mut distances = BTreeMap::new();
         for (&destination, (distance, paths)) in next {
@@ -130,4 +155,5 @@ pub enum Route {
     Forward {
         msg: Message,
     },
+    Notify,
 }
