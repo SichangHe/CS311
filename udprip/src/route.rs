@@ -53,11 +53,15 @@ async fn notify(
     next: &BTreeMap<IpAddr, (f64, Vec<IpAddr>)>,
     senders: &Senders,
 ) {
-    let mut distances = BTreeMap::new();
-    for (&destination, (distance, _)) in next {
-        distances.insert(destination, *distance);
-    }
     for &to in accept.keys() {
+        let mut distances = BTreeMap::new();
+        for (&destination, (distance, paths)) in next {
+            if destination == to || paths.contains(&to) {
+                // Skip routes that goes to `to`.
+                continue;
+            }
+            distances.insert(destination, *distance);
+        }
         let msg = Message {
             source,
             destination: to,
