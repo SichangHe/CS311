@@ -1,26 +1,28 @@
-use std::{collections::BTreeMap, net::IpAddr};
-
 use log::debug;
+use rand::seq::SliceRandom;
+use std::{collections::BTreeMap, net::IpAddr};
 use tokio::sync::mpsc::Receiver;
 
-pub async fn manage(mut cmd_receiver: Receiver<Update>) {
+use crate::{channel::Senders, message::Message, socket::Send};
+
+pub async fn manage(senders: Senders, mut cmd_receiver: Receiver<Route>) {
     let mut accept = BTreeMap::new();
     let mut peer: BTreeMap<_, BTreeMap<_, _>> = BTreeMap::new();
     let mut next = BTreeMap::new();
-    while let Some(update) = cmd_receiver.recv().await {
-        debug!("Update: {update:#?}");
-        match update {
-            Update::Add { ip, weight } => {
+    while let Some(route) = cmd_receiver.recv().await {
+        debug!("Route: {route:#?}");
+        match route {
+            Route::Add { ip, weight } => {
                 accept.insert(ip, weight);
                 debug!("`accept` is now {accept:#?}");
                 // TODO: Notify peers.
             }
-            Update::Del { ip } => {
+            Route::Del { ip } => {
                 accept.remove(&ip);
                 debug!("`accept` is now {accept:#?}");
                 // TODO: Notify peers.
             }
-            Update::Update { source, distances } => {
+            Route::Update { source, distances } => {
                 for (addr, distance) in distances {
                     match peer.get_mut(&addr) {
                         Some(paths) => {
@@ -36,6 +38,19 @@ pub async fn manage(mut cmd_receiver: Receiver<Update>) {
                 debug!("`peer` is now {peer:#?}.");
                 next = calculate_next(&peer);
                 debug!("`next` is now {next:#?}.");
+            }
+            Route::Forward { msg } => {
+                let to = match next.get(&msg.destination) {
+                    Some((_, paths)) => *paths
+                        .choose(&mut rand::thread_rng())
+                        .expect("Paths vector is empty"),
+                    None => {
+                        // Drop the package.
+                        debug!("No next hop found for {msg:?}.");
+                        continue;
+                    }
+                };
+                senders.send(Send { to, msg }).await;
             }
         }
     }
@@ -63,7 +78,7 @@ fn calculate_next(
 }
 
 #[derive(Debug)]
-pub enum Update {
+pub enum Route {
     Add {
         ip: IpAddr,
         weight: usize,
@@ -74,5 +89,8 @@ pub enum Update {
     Update {
         source: IpAddr,
         distances: BTreeMap<IpAddr, f64>,
+    },
+    Forward {
+        msg: Message,
     },
 }

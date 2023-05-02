@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use std::{collections::BTreeMap, net::IpAddr};
 use tokio::sync::mpsc::Receiver;
 
-use crate::{channel::Senders, route::Update};
+use crate::{channel::Senders, route::Route};
 
 pub async fn listen(addr: IpAddr, mut msg_receiver: Receiver<String>, senders: Senders) {
     while let Some(msg) = msg_receiver.recv().await {
@@ -20,10 +20,10 @@ pub async fn listen(addr: IpAddr, mut msg_receiver: Receiver<String>, senders: S
     }
 }
 
-pub async fn act(addr: IpAddr, msg: Message, senders: &Senders) -> Result<()> {
+pub async fn act(addr: IpAddr, mut msg: Message, senders: &Senders) -> Result<()> {
     match msg.tipe.as_str() {
         "data" => {
-            let payload = match msg.payload {
+            let payload = match &msg.payload {
                 Some(p) => p,
                 None => bail!("Data message without payload `{msg:?}`."),
             };
@@ -31,7 +31,7 @@ pub async fn act(addr: IpAddr, msg: Message, senders: &Senders) -> Result<()> {
                 // This message is for me.
                 println!("{payload}");
             } else {
-                // TODO: Forward the message.
+                senders.route(Route::Forward { msg }).await;
             }
         }
         "update" => {
@@ -43,22 +43,32 @@ pub async fn act(addr: IpAddr, msg: Message, senders: &Senders) -> Result<()> {
                 None => bail!("Update message without distances: `{msg:?}."),
             };
             senders
-                .route(Update::Update {
+                .route(Route::Update {
                     source: msg.source,
                     distances,
                 })
                 .await
         }
         "trace" => {
-            let mut routers = match msg.routers {
+            let routers = match &mut msg.routers {
                 Some(r) => r,
                 None => bail!("Trace message without routers: `{msg:?}`."),
             };
             routers.push(addr);
             if msg.destination == addr {
-                // TODO: Respond.
+                let msg = Message {
+                    source: addr,
+                    destination: msg.source,
+                    tipe: "data".into(),
+                    payload: Some(
+                        serde_json::to_string(&msg).expect("Failed to parse message as JSON."),
+                    ),
+                    distances: None,
+                    routers: None,
+                };
+                senders.route(Route::Forward { msg }).await;
             } else {
-                // TODO: Forward.
+                senders.route(Route::Forward { msg }).await;
             }
         }
         _ => debug!("Unknow message type: `{msg:?}`."),

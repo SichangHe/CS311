@@ -32,15 +32,17 @@ async fn main() {
     let (response, mut response_receiver) = channel(2);
     let (route, route_receiver) = channel(8);
     let (msg, msg_receiver) = channel(64);
+    let (send, send_receiver) = channel(8);
     let senders = Senders {
         cmd,
         response,
         route,
         msg,
+        send,
     };
-    let _socket = spawn(bind(args.address, senders.clone()));
+    let _socket = spawn(bind(args.address, senders.clone(), send_receiver));
     let _command_handle = spawn(handle(cmd_receiver, senders.clone()));
-    let _route_manager = spawn(manage(route_receiver));
+    let _route_manager = spawn(manage(senders.clone(), route_receiver));
     let _msg_listener = spawn(listen(args.address, msg_receiver, senders.clone()));
     if let Some(path) = args.startup {
         startup_file(&path, &senders, &mut response_receiver).await;

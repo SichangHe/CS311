@@ -4,7 +4,7 @@ use clap::Parser;
 use log::debug;
 use tokio::sync::mpsc::Receiver;
 
-use crate::{channel::Senders, route::Update};
+use crate::{channel::Senders, route::Route};
 
 pub async fn handle(mut cmd_receiver: Receiver<String>, senders: Senders) {
     while let Some(buf) = cmd_receiver.recv().await {
@@ -22,8 +22,8 @@ pub async fn handle(mut cmd_receiver: Receiver<String>, senders: Senders) {
             Ok(cmd) => {
                 debug!("Parsed command: `{cmd:?}`.");
                 match cmd {
-                    Command::Add { ip, weight } => senders.route(Update::Add { ip, weight }).await,
-                    Command::Del { ip } => senders.route(Update::Del { ip }).await,
+                    Command::Add { ip, weight } => senders.route(Route::Add { ip, weight }).await,
+                    Command::Del { ip } => senders.route(Route::Del { ip }).await,
                     Command::Trace { ip: _ } => todo!(),
                     Command::Quit => exit(0),
                 }

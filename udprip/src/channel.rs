@@ -1,13 +1,14 @@
 use tokio::sync::mpsc::Sender;
 
-use crate::route::Update;
+use crate::{route::Route, socket::Send};
 
 #[derive(Clone)]
 pub struct Senders {
     pub cmd: Sender<String>,
     pub response: Sender<String>,
-    pub route: Sender<Update>,
+    pub route: Sender<Route>,
     pub msg: Sender<String>,
+    pub send: Sender<Send>,
 }
 
 impl Senders {
@@ -20,10 +21,13 @@ impl Senders {
             .await
             .expect("Response receiver closed.")
     }
-    pub async fn route(&self, msg: Update) {
+    pub async fn route(&self, msg: Route) {
         self.route.send(msg).await.expect("Route receiver closed.")
     }
     pub async fn msg(&self, msg: String) {
         self.msg.send(msg).await.expect("Msg receiver closed.")
+    }
+    pub async fn send(&self, msg: Send) {
+        self.send.send(msg).await.expect("Send receiver closed.")
     }
 }
