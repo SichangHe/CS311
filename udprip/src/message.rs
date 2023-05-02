@@ -83,6 +83,6 @@ pub struct Message {
     #[serde(rename = "type")]
     pub tipe: String,
     pub payload: Option<String>,
-    pub distances: Option<BTreeMap<IpAddr, f64>>,
+    pub distances: Option<BTreeMap<IpAddr, usize>>,
     pub routers: Option<Vec<IpAddr>>,
 }

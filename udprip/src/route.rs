@@ -1,6 +1,6 @@
 use log::debug;
 use rand::seq::SliceRandom;
-use std::{collections::BTreeMap, net::IpAddr};
+use std::{cmp::Ordering, collections::BTreeMap, net::IpAddr};
 use tokio::sync::mpsc::Receiver;
 
 use crate::{channel::Senders, message::Message, socket::Send};
@@ -47,8 +47,8 @@ pub async fn manage(addr: IpAddr, senders: Senders, mut cmd_receiver: Receiver<R
 
 async fn notify(
     source: IpAddr,
-    accept: &BTreeMap<IpAddr, f64>,
-    next: &BTreeMap<IpAddr, (f64, Vec<IpAddr>)>,
+    accept: &BTreeMap<IpAddr, usize>,
+    next: &BTreeMap<IpAddr, (usize, Vec<IpAddr>)>,
     senders: &Senders,
 ) {
     for &to in accept.keys() {
@@ -73,9 +73,9 @@ async fn notify(
 }
 
 fn calculate_next(
-    accept: &BTreeMap<IpAddr, f64>,
-    peer: &BTreeMap<IpAddr, BTreeMap<IpAddr, f64>>,
-) -> BTreeMap<IpAddr, (f64, Vec<IpAddr>)> {
+    accept: &BTreeMap<IpAddr, usize>,
+    peer: &BTreeMap<IpAddr, BTreeMap<IpAddr, usize>>,
+) -> BTreeMap<IpAddr, (usize, Vec<IpAddr>)> {
     let mut next = BTreeMap::new();
     for (&destination, &weight) in accept {
         next.insert(destination, (weight, vec![destination]));
@@ -91,14 +91,14 @@ fn calculate_next(
             } + distance;
 
             next.entry(destination)
-                .and_modify(|(old_weight, sources)| {
-                    if weight < *old_weight {
+                .and_modify(|(old_weight, sources)| match weight.cmp(old_weight) {
+                    Ordering::Less => {
                         *old_weight = weight;
                         sources.clear();
                         sources.push(source);
-                    } else if weight == *old_weight {
-                        sources.push(source);
                     }
+                    Ordering::Equal => sources.push(source),
+                    _ => (),
                 })
                 .or_insert((weight, vec![source]));
         }
@@ -110,14 +110,14 @@ fn calculate_next(
 pub enum Route {
     Add {
         ip: IpAddr,
-        weight: f64,
+        weight: usize,
     },
     Del {
         ip: IpAddr,
     },
     Update {
         source: IpAddr,
-        distances: BTreeMap<IpAddr, f64>,
+        distances: BTreeMap<IpAddr, usize>,
     },
     Forward {
         msg: Message,
