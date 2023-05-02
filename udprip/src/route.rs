@@ -25,9 +25,7 @@ pub async fn manage(addr: IpAddr, senders: Senders, mut cmd_receiver: Receiver<R
                 notify(addr, &accept, &next, &senders).await;
             }
             Route::Update { source, distances } => {
-                for (destination, distance) in distances {
-                    peer.insert_path(destination, source, distance);
-                }
+                peer.insert(source, distances);
                 next = calculate_next(&accept, &peer);
             }
             Route::Forward { msg } => {
@@ -82,11 +80,8 @@ fn calculate_next(
     for (&destination, &weight) in accept {
         next.insert(destination, (weight, vec![destination]));
     }
-    for (&destination, paths) in peer {
-        let (mut min_weight, mut best_sources) = next
-            .remove(&destination)
-            .unwrap_or((f64::MAX, Vec::with_capacity(1)));
-        for (&source, &distance) in paths {
+    for (&source, paths) in peer {
+        for (&destination, &distance) in paths {
             let weight = match accept.get(&source) {
                 Some(&w) => w,
                 None => {
@@ -94,43 +89,21 @@ fn calculate_next(
                     continue;
                 }
             } + distance;
-            if weight < min_weight {
-                min_weight = weight;
-                best_sources.clear();
-                best_sources.push(source);
-            } else if weight == min_weight {
-                best_sources.push(source)
-            }
+
+            next.entry(destination)
+                .and_modify(|(old_weight, sources)| {
+                    if weight < *old_weight {
+                        *old_weight = weight;
+                        sources.clear();
+                        sources.push(source);
+                    } else if weight == *old_weight {
+                        sources.push(source);
+                    }
+                })
+                .or_insert((weight, vec![source]));
         }
-        next.insert(destination, (min_weight, best_sources));
     }
     next
-}
-
-trait Peers {
-    fn insert_path(&mut self, destination: IpAddr, source: IpAddr, distance: f64);
-    fn remove_source(&mut self, source: &IpAddr);
-}
-
-impl Peers for BTreeMap<IpAddr, BTreeMap<IpAddr, f64>> {
-    fn insert_path(&mut self, destination: IpAddr, source: IpAddr, distance: f64) {
-        match self.get_mut(&destination) {
-            Some(paths) => {
-                paths.insert(source, distance);
-            }
-            None => {
-                let mut paths = BTreeMap::new();
-                paths.insert(source, distance);
-                self.insert(destination, paths);
-            }
-        }
-    }
-
-    fn remove_source(&mut self, source: &IpAddr) {
-        for paths in self.values_mut() {
-            paths.remove(source);
-        }
-    }
 }
 
 #[derive(Debug)]
