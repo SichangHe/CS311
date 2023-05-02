@@ -17,6 +17,11 @@ pub async fn bind(addr: IpAddr, senders: Senders) {
             Ok((n_read, other_addr)) => {
                 let msg = String::from_utf8_lossy(&buf[..n_read]);
                 debug!("Received `{msg}` from `{other_addr}`.");
+                senders
+                    .msg
+                    .send(msg.into())
+                    .await
+                    .expect("Message receiver closed.");
                 init_zero(&mut buf, n_read);
             }
             Err(err) => println!("{err}"),

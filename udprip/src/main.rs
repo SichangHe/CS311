@@ -1,5 +1,6 @@
 pub mod channel;
 pub mod command;
+pub mod message;
 pub mod route;
 pub mod socket;
 
@@ -20,7 +21,7 @@ use tokio::{
     sync::mpsc::{channel, Receiver},
 };
 
-use crate::{channel::Senders, route::manage, socket::bind};
+use crate::{channel::Senders, message::listen, route::manage, socket::bind};
 
 #[tokio::main]
 async fn main() {
@@ -30,14 +31,17 @@ async fn main() {
     let (cmd, cmd_receiver) = channel(1);
     let (response, mut response_receiver) = channel(2);
     let (route, route_receiver) = channel(8);
+    let (msg, msg_receiver) = channel(64);
     let senders = Senders {
         cmd,
         response,
         route,
+        msg,
     };
     let _socket = spawn(bind(args.address, senders.clone()));
     let _command_handle = spawn(handle(cmd_receiver, senders.clone()));
     let _route_manager = spawn(manage(route_receiver));
+    let _msg_listener = spawn(listen(msg_receiver, senders.clone()));
     if let Some(path) = args.startup {
         startup_file(&path, &senders, &mut response_receiver).await;
     }
