@@ -1,6 +1,7 @@
 pub mod channel;
 pub mod command;
 pub mod route;
+pub mod socket;
 
 use std::{
     fs::File,
@@ -19,7 +20,7 @@ use tokio::{
     sync::mpsc::{channel, Receiver},
 };
 
-use crate::{channel::Senders, route::manage};
+use crate::{channel::Senders, route::manage, socket::bind};
 
 #[tokio::main]
 async fn main() {
@@ -34,6 +35,7 @@ async fn main() {
         response,
         route,
     };
+    let _socket = spawn(bind(args.address, senders.clone()));
     let _command_handle = spawn(handle(cmd_receiver, senders.clone()));
     let _route_manager = spawn(manage(route_receiver));
     if let Some(path) = args.startup {
