@@ -22,7 +22,7 @@ pub async fn bind(addr: IpAddr, senders: Senders, mut send_receiver: Receiver<Se
             }
         };
         match socket.send_to(msg.as_bytes(), (send.to, PORT)).await {
-            Ok(_) => debug!("Sent `{message}` to {}", send.to),
+            Ok(_) => debug!("Sent `{msg}` to {}", send.to),
             Err(err) => debug!("{err}"),
         }
     }

@@ -5,7 +5,7 @@ use tokio::sync::mpsc::Receiver;
 
 use crate::{channel::Senders, message::Message, socket::Send};
 
-pub async fn manage(senders: Senders, mut cmd_receiver: Receiver<Route>) {
+pub async fn manage(addr: IpAddr, senders: Senders, mut cmd_receiver: Receiver<Route>) {
     let mut accept = BTreeMap::new();
     let mut peer: BTreeMap<_, BTreeMap<_, _>> = BTreeMap::new();
     let mut next = BTreeMap::new();
@@ -15,12 +15,12 @@ pub async fn manage(senders: Senders, mut cmd_receiver: Receiver<Route>) {
             Route::Add { ip, weight } => {
                 accept.insert(ip, weight);
                 debug!("`accept` is now {accept:#?}");
-                // TODO: Notify peers.
+                notify(addr, &accept, &next, &senders).await;
             }
             Route::Del { ip } => {
                 accept.remove(&ip);
                 debug!("`accept` is now {accept:#?}");
-                // TODO: Notify peers.
+                notify(addr, &accept, &next, &senders).await;
             }
             Route::Update { source, distances } => {
                 for (addr, distance) in distances {
@@ -53,6 +53,29 @@ pub async fn manage(senders: Senders, mut cmd_receiver: Receiver<Route>) {
                 senders.send(Send { to, msg }).await;
             }
         }
+    }
+}
+
+async fn notify(
+    source: IpAddr,
+    accept: &BTreeMap<IpAddr, usize>,
+    next: &BTreeMap<IpAddr, (f64, Vec<IpAddr>)>,
+    senders: &Senders,
+) {
+    let mut distances = BTreeMap::new();
+    for (&destination, (distance, _)) in next {
+        distances.insert(destination, *distance);
+    }
+    for &to in accept.keys() {
+        let msg = Message {
+            source,
+            destination: to,
+            tipe: "update".into(),
+            payload: None,
+            distances: Some(distances.clone()),
+            routers: None,
+        };
+        senders.send(Send { to, msg }).await;
     }
 }
 
