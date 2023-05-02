@@ -40,7 +40,7 @@ pub enum Command {
         #[arg(index = 1)]
         ip: IpAddr,
         #[arg(index = 2)]
-        weight: usize,
+        weight: f64,
     },
     Del {
         #[arg(index = 1)]
