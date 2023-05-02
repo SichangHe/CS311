@@ -41,7 +41,7 @@ async fn main() {
         send,
     };
     let _socket = spawn(bind(args.address, senders.clone(), send_receiver));
-    let _command_handle = spawn(handle(cmd_receiver, senders.clone()));
+    let _command_handle = spawn(handle(args.address, cmd_receiver, senders.clone()));
     let _route_manager = spawn(manage(args.address, senders.clone(), route_receiver));
     let _msg_listener = spawn(listen(args.address, msg_receiver, senders.clone()));
     if let Some(path) = args.startup {

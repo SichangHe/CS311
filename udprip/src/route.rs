@@ -28,21 +28,29 @@ pub async fn manage(addr: IpAddr, senders: Senders, mut cmd_receiver: Receiver<R
                 peer.insert(source, distances);
                 next = calculate_next(&accept, &peer);
             }
-            Route::Forward { msg } => {
-                let to = match next.get(&msg.destination) {
-                    Some((_, paths)) => *paths
-                        .choose(&mut rand::thread_rng())
-                        .expect("Paths vector is empty"),
-                    None => {
-                        // Drop the package.
-                        debug!("No next hop found for {msg:?}.");
-                        continue;
-                    }
-                };
-                senders.send(Send { to, msg }).await;
-            }
+            Route::Forward { msg } => send(&next, &msg.destination.clone(), msg, &senders).await,
         }
     }
+}
+
+async fn send(
+    next: &BTreeMap<IpAddr, (usize, Vec<IpAddr>)>,
+    destination: &IpAddr,
+    msg: Message,
+    senders: &Senders,
+) {
+    match next.get(destination) {
+        Some((_, paths)) => {
+            let to = *paths
+                .choose(&mut rand::thread_rng())
+                .expect("Paths vector is empty");
+            senders.send(Send { to, msg }).await;
+        }
+        None => {
+            // Drop the package.
+            debug!("No next hop found for {msg:?}.");
+        }
+    };
 }
 
 async fn notify(
