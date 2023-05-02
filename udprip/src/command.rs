@@ -4,18 +4,14 @@ use clap::Parser;
 use log::debug;
 use tokio::sync::mpsc::Receiver;
 
-use crate::channel::Senders;
+use crate::{channel::Senders, route::Update};
 
 pub async fn handle(mut cmd_receiver: Receiver<String>, senders: Senders) {
     while let Some(buf) = cmd_receiver.recv().await {
         let input = buf.trim();
         // Ignore empty input.
         if input.is_empty() {
-            senders
-                .response
-                .send("".into())
-                .await
-                .expect("Response receiver closed.");
+            senders.response("".into()).await;
             continue;
         }
         debug!("Received command `{input}`.");
@@ -26,30 +22,14 @@ pub async fn handle(mut cmd_receiver: Receiver<String>, senders: Senders) {
             Ok(cmd) => {
                 debug!("Parsed command: `{cmd:?}`.");
                 match cmd {
-                    Command::Add { ip: _, weight: _ } => senders
-                        .route
-                        .send(cmd)
-                        .await
-                        .expect("Route receiver cclosed."),
-                    Command::Del { ip: _ } => senders
-                        .route
-                        .send(cmd)
-                        .await
-                        .expect("Route receiver cclosed."),
+                    Command::Add { ip, weight } => senders.route(Update::Add { ip, weight }).await,
+                    Command::Del { ip } => senders.route(Update::Del { ip }).await,
                     Command::Trace { ip: _ } => todo!(),
                     Command::Quit => exit(0),
                 }
-                senders
-                    .response
-                    .send("".into())
-                    .await
-                    .expect("Response receiver closed.");
+                senders.response("".into()).await;
             }
-            Err(err) => senders
-                .response
-                .send(err.to_string())
-                .await
-                .expect("Response receiver closed."),
+            Err(err) => senders.response(err.to_string()).await,
         }
     }
 }

@@ -41,7 +41,7 @@ async fn main() {
     let _socket = spawn(bind(args.address, senders.clone()));
     let _command_handle = spawn(handle(cmd_receiver, senders.clone()));
     let _route_manager = spawn(manage(route_receiver));
-    let _msg_listener = spawn(listen(msg_receiver, senders.clone()));
+    let _msg_listener = spawn(listen(args.address, msg_receiver, senders.clone()));
     if let Some(path) = args.startup {
         startup_file(&path, &senders, &mut response_receiver).await;
     }
@@ -81,11 +81,7 @@ async fn startup_file(path: &Path, senders: &Senders, response_receiver: &mut Re
 
 /// Handle one line read.
 async fn handle_line(line: String, senders: &Senders, response_receiver: &mut Receiver<String>) {
-    senders
-        .cmd
-        .send(line)
-        .await
-        .expect("Command handle is closed.");
+    senders.cmd(line).await;
     let response = response_receiver
         .recv()
         .await
